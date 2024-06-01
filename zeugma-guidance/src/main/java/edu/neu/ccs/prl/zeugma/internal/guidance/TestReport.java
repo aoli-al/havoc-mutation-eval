@@ -25,8 +25,6 @@ public final class TestReport {
      */
     private final FuzzTarget target;
 
-    public String serializedRecording;
-
     public TestReport(Throwable failure, ByteList recording, FuzzTarget target) {
         if (target == null) {
             throw new NullPointerException();

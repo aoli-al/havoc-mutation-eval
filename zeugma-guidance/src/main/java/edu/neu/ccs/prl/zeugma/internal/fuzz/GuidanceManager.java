@@ -39,7 +39,6 @@ public class GuidanceManager implements CampaignStatus {
             out.saveToFailures(report.getRecording());
         }
         if (counter.update(coverageMap)) {
-            out.saveToGen(report.serializedRecording);
             out.saveToCorpus(report.getRecording());
         }
         meanInputSize.extend(report.getRecording().size());
