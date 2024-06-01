@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
@@ -26,6 +27,7 @@ public final class CampaignOutput {
      * Non-null.
      */
     private final File corpusDirectory;
+    private final File genDirectory;
     /**
      * File in which campaign statistics are written.
      * <p>
@@ -48,9 +50,11 @@ public final class CampaignOutput {
     public CampaignOutput(File outputDirectory) throws IOException {
         this.failureDirectory = getFailuresDirectory(outputDirectory);
         this.corpusDirectory = getCorpusDirectory(outputDirectory);
+        this.genDirectory = getGenDirectory(outputDirectory);
         this.statisticsFile = getStatisticsFile(outputDirectory);
         FileUtil.ensureEmptyDirectory(corpusDirectory);
         FileUtil.ensureEmptyDirectory(failureDirectory);
+        FileUtil.ensureEmptyDirectory(genDirectory);
         if (statisticsFile.exists() && !statisticsFile.delete()) {
             throw new IOException("Failed to delete: " + statisticsFile);
         }
@@ -83,8 +87,17 @@ public final class CampaignOutput {
         Files.write(file.toPath(), input.toArray());
     }
 
+    public void saveToGen(String serialized) throws IOException {
+        File file = new File(genDirectory, String.format("id_%06d.txt", corpusSize));
+        Files.write(file.toPath(), serialized.getBytes(StandardCharsets.UTF_8));
+    }
+
     public static File getCorpusDirectory(File outputDirectory) {
         return new File(outputDirectory, "corpus");
+    }
+
+    public static File getGenDirectory(File outputDirectory) {
+        return new File(outputDirectory, "gen");
     }
 
     public static File getFailuresDirectory(File outputDirectory) {

@@ -57,8 +57,12 @@ final class ParametricFuzzTarget implements FuzzTarget {
     @Override
     public TestReport run(RecordingDataProvider provider) {
         Throwable failure = runInternal(provider);
-        return new TestReport(failure, provider.getRecording(), this);
+        TestReport report = new TestReport(failure, provider.getRecording(), this);
+        report.serializedRecording = generatedObjects[0].toString();
+        return report;
     }
+
+    private Object[] generatedObjects;
 
     private Throwable runInternal(RecordingDataProvider provider) {
         Object[] arguments;
@@ -66,6 +70,7 @@ final class ParametricFuzzTarget implements FuzzTarget {
         try {
             SourceOfRandomness source = new ProviderBackedRandomness(provider, maxInputSize);
             arguments = generator.generate(source, new AttemptUnawareGenerationStatus(source, maxStatusSize));
+            generatedObjects = arguments;
         } catch (InputSizeException | AssumptionViolatedException ignored) {
             return null;
         } catch (Throwable t) {
