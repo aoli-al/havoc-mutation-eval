@@ -94,4 +94,9 @@ public class ZeugmaFramework implements JarFuzzFramework {
     public void setFrameworkJar(File frameworkJar) {
         this.frameworkJar = frameworkJar;
     }
+
+    @Override
+    public List<String> getAnalysisJavaOptions() {
+        return List.of("-Dreplay.directory=" + config.getOutputDirectory().getAbsolutePath());
+    }
 }

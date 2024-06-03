@@ -21,28 +21,28 @@ for algo, indices in campaigns.items():
         path = os.path.join(base, str(campaign))
         if not os.path.exists(path):
             continue
-        #  subprocess.run([
-            #  "mvn",
-            #  "-pl",
-            #  ":zeugma-evaluation-heritability",
-            #  "-Pcompute",
-            #  "install",
-            #  f"-Dheritability.corpora={path}",
-            #  f"-Dheritability.output=/tmp/out"
-        #  ])
-        #  command = " ".join([
-            #  f"JVM_OPTS=\"-Djqf.repro.logUniqueBranches=true -Djqf.repro.traceDir={path}\"",
-            #  "./bin/jqf-repro",
-            #  "-i",
-            #  "-c",
-            #  "$(./scripts/examples_classpath.sh)",
-            #  "edu.berkeley.cs.jqf.examples.closure.CompilerTest",
-            #  "testWithInputStream",
-            #  os.path.join(path, "gen")
-        #  ])
-        #  subprocess.run(f"{command} 2> /dev/null | grep \"^# Cov\" | sort | uniq > {path}/cov-all.log",
-                       #  shell=True,
-                       #  cwd="/Users/aoli/repos/JQF-ei")
+        subprocess.run([
+            "mvn",
+            "-pl",
+            ":zeugma-evaluation-tools",
+            "meringue:analyze",
+            "-Pclosure,zeugma-none",
+            "-Dmeringue.duration=P1DT0H0M",
+            "-Dmeringue.outputDirectory=",
+        ])
+        command = " ".join([
+            f"JVM_OPTS=\"-Djqf.repro.logUniqueBranches=true -Djqf.repro.traceDir={path}\"",
+            "./bin/jqf-repro",
+            "-i",
+            "-c",
+            "$(./scripts/examples_classpath.sh)",
+            "edu.berkeley.cs.jqf.examples.closure.CompilerTest",
+            "testWithInputStream",
+            os.path.join(path, "gen")
+        ])
+        subprocess.run(f"{command} 2> /dev/null | grep \"^# Cov\" | sort | uniq > {path}/cov-all.log",
+                       shell=True,
+                       cwd="/Users/aoli/repos/JQF-ei")
         with open(os.path.join(path, "cov-all.log")) as f:
             result = set()
             for line in f:

@@ -11,11 +11,16 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 
+import java.io.File;
+import java.io.FileWriter;
+
 final class ParametricFuzzTarget implements FuzzTarget {
     private final FailureListener listener = new FailureListener();
     private final JqfRunner runner;
     private final RunNotifier notifier;
     private final StructuredInputGenerator generator;
+    private final String outputPath = System.getProperty("replay.directory");
+    private int outputIndex = 0;
     private final int maxStatusSize;
     private final int maxTraceSize;
     private final int maxInputSize;
@@ -67,6 +72,16 @@ final class ParametricFuzzTarget implements FuzzTarget {
         try {
             SourceOfRandomness source = new ProviderBackedRandomness(provider, maxInputSize);
             arguments = generator.generate(source, new AttemptUnawareGenerationStatus(source, maxStatusSize));
+            if (outputPath != null) {
+                File folder = new File(outputPath + "/gen");
+                if (!folder.exists()) {
+                    folder.mkdirs();
+                }
+                try (FileWriter f = new FileWriter(outputPath + "/gen/" + "id" + outputIndex++ + ".txt")) {
+                    System.out.println("saving: " + outputPath);
+                    f.write(arguments[0].toString());
+                }
+            }
         } catch (InputSizeException | AssumptionViolatedException ignored) {
             return null;
         } catch (Throwable t) {
