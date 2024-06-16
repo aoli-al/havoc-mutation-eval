@@ -197,8 +197,10 @@
         <profile>
             <id>bedivfuzz-structure</id>
             <properties>
+                <!--suppress UnresolvedMavenProperty -->
                 <meringue.argLine>
                     -Djqf.ei.SAVE_ONLY_VALID=true -Djqf.div.SAVE_ONLY_NEW_STRUCTURES=true
+                    -Dreplay.directory=${meringue.outputDirectory}
                 </meringue.argLine>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
                 <meringue.testMethod>testWithSplitGenerator</meringue.testMethod>
@@ -230,7 +232,8 @@
         <profile>
             <id>bedivfuzz-simple</id>
             <properties>
-                <meringue.argLine>-Djqf.ei.SAVE_ONLY_VALID=true</meringue.argLine>
+                <!--suppress UnresolvedMavenProperty -->
+                <meringue.argLine>-Djqf.ei.SAVE_ONLY_VALID=true -Dreplay.directory=${meringue.outputDirectory}</meringue.argLine>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
                 <meringue.testMethod>testWithSplitGenerator</meringue.testMethod>
             </properties>

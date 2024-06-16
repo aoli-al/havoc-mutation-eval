@@ -7,6 +7,7 @@ import edu.neu.ccs.prl.meringue.Replayer;
 import edu.neu.ccs.prl.meringue.ReplayerManager;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public final class BeDivReplayer implements Replayer {
@@ -44,9 +45,27 @@ public final class BeDivReplayer implements Replayer {
 
     private static final class BeDivReplayGuidance extends BeDivReproGuidance {
         private Throwable error = null;
+        private final String outputPath = System.getProperty("replay.directory");
+        private static int outputIndex = 0;
 
         public BeDivReplayGuidance(File input) {
             super(input, null);
+        }
+
+        @Override
+        public void observeGeneratedArgs(Object[] args) {
+            super.observeGeneratedArgs(args);
+            if (outputPath != null) {
+                File folder = new File(outputPath + "/gen");
+                if (!folder.exists()) {
+                    folder.mkdirs();
+                }
+                try (FileWriter f = new FileWriter(outputPath + "/gen/" + "id" + outputIndex++ + ".txt")) {
+                    System.out.println("saving: " + outputPath);
+                    f.write(args[0].toString());
+                } catch (IOException e) {
+                }
+            }
         }
 
         @Override
