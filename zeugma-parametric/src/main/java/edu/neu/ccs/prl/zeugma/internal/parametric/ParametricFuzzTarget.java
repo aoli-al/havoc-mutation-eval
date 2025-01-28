@@ -61,12 +61,10 @@ final class ParametricFuzzTarget implements FuzzTarget {
 
     @Override
     public TestReport run(RecordingDataProvider provider) {
-        Throwable failure = runInternal(provider);
-        TestReport report = new TestReport(failure, provider.getRecording(), this);
-        return report;
+        return runInternal(provider);
     }
 
-    private Throwable runInternal(RecordingDataProvider provider) {
+    private TestReport runInternal(RecordingDataProvider provider) {
         Object[] arguments;
         boolean terminateEarly;
         try {
@@ -83,9 +81,9 @@ final class ParametricFuzzTarget implements FuzzTarget {
                 }
             }
         } catch (InputSizeException | AssumptionViolatedException ignored) {
-            return null;
+            return new TestReport(null, provider.getRecording(), this, "");
         } catch (Throwable t) {
-            return t;
+            return new TestReport(t, provider.getRecording(), this, "");
         } finally {
             terminateEarly = provider.close();
         }
@@ -94,7 +92,7 @@ final class ParametricFuzzTarget implements FuzzTarget {
         }
         try {
             runner.execute(notifier, arguments);
-            return listener.getAndReset();
+            return new TestReport(listener.getAndReset(), provider.getRecording(), this, arguments[0].toString());
         } catch (Throwable t) {
             propagateOutOfMemoryError(t);
             throw new IllegalStateException("Failed to execute test", t);

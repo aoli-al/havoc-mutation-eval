@@ -5,6 +5,8 @@ import edu.neu.ccs.prl.zeugma.internal.runtime.struct.SimpleSet;
 import edu.neu.ccs.prl.zeugma.internal.util.ByteList;
 import edu.neu.ccs.prl.zeugma.internal.util.Function;
 
+import java.util.function.BiFunction;
+
 public class PopulationTracker<T extends Individual> {
     private final SimpleList<T[]> bestMap = new SimpleList<>();
     /**
@@ -12,13 +14,13 @@ public class PopulationTracker<T extends Individual> {
      * <p>
      * Non-null.
      */
-    private final Function<? super ByteList, ? extends T> factory;
+    private final BiFunction<? super ByteList, ? super String, ? extends T> factory;
     /**
      * Population of interesting inputs.
      */
     private SimpleList<T> population = new SimpleList<>();
 
-    public PopulationTracker(Function<? super ByteList, ? extends T> factory) {
+    public PopulationTracker(BiFunction<? super ByteList, ? super String, ? extends T> factory) {
         if (factory == null) {
             throw new NullPointerException();
         }
@@ -40,14 +42,17 @@ public class PopulationTracker<T extends Individual> {
         return population;
     }
 
-    public void update(TestReport report, boolean[][] coverageMap) {
+    public boolean update(TestReport report, boolean[][] coverageMap) {
+        boolean saved = false;
         // Avoid saving inputs that trigger expensive failures to the population
         if (!(report.getFailure() instanceof StackOverflowError || report.getFailure() instanceof OutOfMemoryError)) {
-            T individual = factory.apply(report.getRecording());
-            if (update(individual, coverageMap)) {
+            T individual = factory.apply(report.getRecording(), report.getGeneratedData());
+            saved = update(individual, coverageMap);
+            if (saved) {
                 individual.initialize(report.getTarget());
             }
         }
+        return saved;
     }
 
     private boolean update(T participant, boolean[][] runCoverageMap) {

@@ -4,12 +4,14 @@ import edu.neu.ccs.prl.zeugma.internal.util.ByteList;
 
 public class Individual {
     private final ByteList input;
+    private final String generatedInput;
 
-    public Individual(ByteList input) {
+    public Individual(ByteList input, String generatedInput) {
         if (input == null) {
             throw new NullPointerException();
         }
         this.input = input;
+        this.generatedInput = generatedInput;
     }
 
     public void initialize(FuzzTarget target) {
@@ -17,6 +19,10 @@ public class Individual {
 
     public ByteList getInput() {
         return input;
+    }
+
+    public String getGeneratedInput() {
+        return generatedInput;
     }
 
     @Override

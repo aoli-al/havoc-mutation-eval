@@ -11,8 +11,8 @@ public class LinkedIndividual extends Individual {
     private SimpleMap<MethodIdentifier, SimpleList<MethodCallVertex>> donationMap = null;
     private SimpleList<MethodCallVertex> applicationPoints = null;
 
-    public LinkedIndividual(ByteList input) {
-        super(input);
+    public LinkedIndividual(ByteList input, String generatedInput) {
+        super(input, generatedInput);
     }
 
     SimpleList<MethodCallVertex> getApplicationPoints() {
