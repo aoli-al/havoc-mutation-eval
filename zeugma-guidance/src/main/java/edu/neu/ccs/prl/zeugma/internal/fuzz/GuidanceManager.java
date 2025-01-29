@@ -34,13 +34,14 @@ public class GuidanceManager implements CampaignStatus {
                 .attach(new StatusScreen(target.getDescriptor(), duration, this), StatusScreen.calculateRecordPeriod());
     }
 
-    public void finishedExecution(TestReport report, boolean[][] coverageMap) throws IOException {
+    public void finishedExecution(TestReport report, boolean[][] coverageMap, String mutationLog) throws IOException {
         if (report.getFailure() != null && failureRegistry.add(report.getFailure())) {
             out.saveToFailures(report.getRecording());
         }
         if (counter.update(coverageMap)) {
             out.saveToCorpus(report.getRecording());
         }
+        out.writeMutationLog(mutationLog);
         meanInputSize.extend(report.getRecording().size());
     }
 

@@ -333,6 +333,14 @@
             </properties>
         </profile>
         <profile>
+            <id>zeugma-linked-mutation-log</id>
+            <properties>
+                <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
+                <meringue.testMethod>testWithGenerator</meringue.testMethod>
+                <meringue.argLine>-Dzeugma.crossover=linked -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true</meringue.argLine>
+            </properties>
+        </profile>
+        <profile>
             <id>zeugma-one_point</id>
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>

@@ -34,6 +34,8 @@ public final class CampaignOutput {
      * Non-null.
      */
     private final File statisticsFile;
+
+    private final File mutationLogFile;
     /**
      * Number of inputs saved to the corpus directory.
      * <p>
@@ -52,6 +54,7 @@ public final class CampaignOutput {
         this.corpusDirectory = getCorpusDirectory(outputDirectory);
         this.genDirectory = getGenDirectory(outputDirectory);
         this.statisticsFile = getStatisticsFile(outputDirectory);
+        this.mutationLogFile = getMutationLogFile(outputDirectory);
         FileUtil.ensureEmptyDirectory(corpusDirectory);
         FileUtil.ensureEmptyDirectory(failureDirectory);
         FileUtil.ensureEmptyDirectory(genDirectory);
@@ -62,6 +65,12 @@ public final class CampaignOutput {
 
     public synchronized void writeStatistics(String line) throws IOException {
         try (PrintWriter out = new PrintWriter(new FileWriter(statisticsFile, true))) {
+            out.println(line);
+        }
+    }
+
+    public synchronized void writeMutationLog(String line) throws IOException {
+        try (PrintWriter out = new PrintWriter(new FileWriter(mutationLogFile, true))) {
             out.println(line);
         }
     }
@@ -106,6 +115,10 @@ public final class CampaignOutput {
 
     public static File getStatisticsFile(File outputDirectory) {
         return new File(outputDirectory, "statistics.csv");
+    }
+
+    public static File getMutationLogFile(File outputDirectory) {
+        return new File(outputDirectory, "mutation.log");
     }
 
     public static ByteList readInput(File file) throws IOException {

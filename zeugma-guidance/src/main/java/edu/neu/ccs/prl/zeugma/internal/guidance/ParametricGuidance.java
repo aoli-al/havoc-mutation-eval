@@ -91,16 +91,17 @@ public class ParametricGuidance<T extends Individual> implements Guidance {
             // Update the population
             boolean saved = tracker.update(report, coverageMap);
 
+            String mutationLog = "";
             if (selected != null && OBSERVE_MUTATION_DISTANCE) {
                 String parent = selected.getGeneratedInput();
                 String child = report.getGeneratedData();
-                int stringDistance = Math.getLevenshteinDistFromString(parent, child));
+                int stringDistance = Math.getLevenshteinDistFromString(parent, child);
                 int byteDistance = Math.getLevenshteinDistFromByteList(selected.getInput(), report.getRecording());
-                String text = child.length() + "," +  parent.length() + "," +
+                mutationLog = child.length() + "," +  parent.length() + "," +
                         byteDistance + "," + stringDistance + "," + saved + "," + "-1" + "," + "-1,-1";
             }
             // Notify the manager that the execution finished
-            manager.finishedExecution(report, coverageMap);
+            manager.finishedExecution(report, coverageMap, mutationLog);
         }
     }
 
