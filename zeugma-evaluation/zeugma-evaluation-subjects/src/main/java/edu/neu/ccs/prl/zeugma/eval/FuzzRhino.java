@@ -35,10 +35,10 @@
 package edu.neu.ccs.prl.zeugma.eval;
 
 import com.pholser.junit.quickcheck.From;
-import edu.berkeley.cs.jqf.examples.js.JavaScriptCodeGenerator;
 import de.hub.se.jqf.examples.js.SplitJavaScriptCodeGenerator;
 import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.JQF;
+import edu.neu.ccs.prl.zeugma.generators.JavaScriptCodeGenerator;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.mozilla.javascript.Context;

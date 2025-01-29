@@ -413,6 +413,42 @@
             </properties>
         </profile>
         <profile>
+            <id>chocopy</id>
+            <properties>
+                <subject>chocopy</subject>
+                <gen.type>py.Python</gen.type>
+                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.FuzzChocopy</meringue.testClass>
+                <meringue.includedArtifacts>ignored</meringue.includedArtifacts>
+            </properties>
+        </profile>
+        <profile>
+            <id>jython</id>
+            <properties>
+                <subject>jython</subject>
+                <gen.type>py.Python</gen.type>
+                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.</meringue.testClass>
+                <meringue.includedArtifacts>ignored</meringue.includedArtifacts>
+            </properties>
+        </profile>
+        <profile>
+            <id>gson</id>
+            <properties>
+                <subject>gson</subject>
+                <gen.type>json.JSON</gen.type>
+                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.FuzzGson</meringue.testClass>
+                <meringue.includedArtifacts>ignored</meringue.includedArtifacts>
+            </properties>
+        </profile>
+        <profile>
+            <id>jackson</id>
+            <properties>
+                <subject>jackson</subject>
+                <gen.type>json.JSON</gen.type>
+                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.FuzzJackson</meringue.testClass>
+                <meringue.includedArtifacts>ignored</meringue.includedArtifacts>
+            </properties>
+        </profile>
+        <profile>
             <id>tomcat</id>
             <properties>
                 <subject>tomcat</subject>

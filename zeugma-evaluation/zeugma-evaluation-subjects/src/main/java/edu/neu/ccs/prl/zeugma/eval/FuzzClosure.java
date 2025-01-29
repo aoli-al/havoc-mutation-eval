@@ -38,9 +38,9 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.*;
 import com.pholser.junit.quickcheck.From;
 import de.hub.se.jqf.examples.js.SplitJavaScriptCodeGenerator;
-import edu.berkeley.cs.jqf.examples.js.JavaScriptCodeGenerator;
 import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.JQF;
+import edu.neu.ccs.prl.zeugma.generators.JavaScriptCodeGenerator;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 
