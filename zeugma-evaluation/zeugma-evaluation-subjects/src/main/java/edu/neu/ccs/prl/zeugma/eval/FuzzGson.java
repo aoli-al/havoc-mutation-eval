@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.pholser.junit.quickcheck.From;
-import edu.berkeley.cs.jqf.examples.common.AsciiStringGenerator;
 import edu.berkeley.cs.jqf.fuzz.JQF;
 import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.neu.ccs.prl.zeugma.generators.JsonGenerator;
