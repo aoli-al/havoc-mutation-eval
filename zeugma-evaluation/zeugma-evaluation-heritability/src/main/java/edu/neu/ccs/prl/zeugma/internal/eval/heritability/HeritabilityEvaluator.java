@@ -150,7 +150,7 @@ final class HeritabilityEvaluator implements Guidance, GuidanceBuilder {
         final Set<ProbeIdentifier> runCoverage = new HashSet<>();
 
         AnnotatedIndividual(ByteList input, boolean[][] coverageMap) {
-            super(input);
+            super(input, "");
             for (int classIndex = 0; classIndex < coverageMap.length; classIndex++) {
                 for (int probeIndex = 0; probeIndex < coverageMap[classIndex].length; probeIndex++) {
                     if (coverageMap[classIndex][probeIndex]) {

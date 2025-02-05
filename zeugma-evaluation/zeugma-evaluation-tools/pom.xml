@@ -12,7 +12,6 @@
     <modules>
         <module>zeugma-evaluation-tools-BeDivFuzz</module>
         <module>zeugma-evaluation-tools-RLCheck</module>
-        <module>BeDivFuzz</module>
     </modules>
     <dependencies>
         <dependency>
@@ -152,6 +151,8 @@
                 <!--suppress UnresolvedMavenProperty -->
                 <meringue.argLine>
                     -Djqf.ei.SAVE_ONLY_VALID=true -Djqf.div.SAVE_ONLY_NEW_STRUCTURES=true
+                    -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true
+                    -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000
                     -Dreplay.directory=${meringue.outputDirectory}
                 </meringue.argLine>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
@@ -161,7 +162,7 @@
                 <dependency>
                     <groupId>edu.berkeley.cs.jqf</groupId>
                     <artifactId>jqf-examples</artifactId>
-                    <version>2.1-bedivfuzz</version>
+                    <version>2.0-bedivfuzz</version>
                     <classifier>tests</classifier>
                 </dependency>
             </dependencies>
@@ -193,7 +194,7 @@
                 <dependency>
                     <groupId>edu.berkeley.cs.jqf</groupId>
                     <artifactId>jqf-examples</artifactId>
-                    <version>2.0-SNAPSHOT-BeDivFuzz</version>
+                    <version>2.0-bedivfuzz</version>
                     <classifier>tests</classifier>
                 </dependency>
             </dependencies>
@@ -264,6 +265,7 @@
         <profile>
             <id>zest</id>
             <properties>
+                <meringue.argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000</meringue.argLine>
                 <meringue.framework>edu.neu.ccs.prl.meringue.ZestFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
             </properties>

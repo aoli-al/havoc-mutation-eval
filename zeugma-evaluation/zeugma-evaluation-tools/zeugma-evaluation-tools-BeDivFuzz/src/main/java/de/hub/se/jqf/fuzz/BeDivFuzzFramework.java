@@ -20,7 +20,7 @@ public class BeDivFuzzFramework extends ZestFramework {
 
     @Override
     protected String getJqfVersion() {
-        return "2.0-SNAPSHOT-BeDivFuzz";
+        return "2.0-bedivfuzz";
     }
 
     @Override

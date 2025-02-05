@@ -1,6 +1,7 @@
 package edu.neu.ccs.prl.zeugma.eval;
 
 import com.pholser.junit.quickcheck.From;
+import de.hub.se.jqf.examples.python.SplitPythonGenerator;
 import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.JQF;
 import edu.berkeley.cs.jqf.fuzz.guidance.TimeoutException;
@@ -19,8 +20,7 @@ import org.python.util.PythonInterpreter;
 
 @RunWith(JQF.class)
 public class FuzzJython {
-    @Fuzz
-    public void testWithGenerator(@From(PythonGenerator.class) String code) throws Throwable {
+    private void testMain(String code) throws Exception {
         PythonCompiler compiler = new LegacyCompiler();
         if (code.contains("\0")) {
             throw Py.TypeError("compile() expected string without null bytes");
@@ -32,4 +32,16 @@ public class FuzzJython {
         PythonCodeBundle bundle = compiler.compile(node, "org.python.pycode._pyx", filename,
                 true, true, cflags);
     }
+
+
+    @Fuzz
+    public void testWithGenerator(@From(PythonGenerator.class) String code) throws Throwable {
+        testMain(code);
+    }
+
+    @Fuzz
+    public void testWithSplitGenerator(@From(SplitPythonGenerator.class) String code) throws Throwable {
+        testMain(code);
+    }
+
 }
