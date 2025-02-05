@@ -1,0 +1,3 @@
+[submodule "zeugma-evaluation/zeugma-evaluation-tools/BeDivFuzz"]
+	path = zeugma-evaluation/zeugma-evaluation-tools/BeDivFuzz
+	url = git@github.com:aoli-al/BeDivFuzz.git
