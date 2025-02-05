@@ -12,7 +12,14 @@
     <modules>
         <module>zeugma-evaluation-tools-BeDivFuzz</module>
         <module>zeugma-evaluation-tools-RLCheck</module>
+        <module>zeugma-evaluation-tools-EI</module>
     </modules>
+    <properties>
+        <!-- Default values to prevent Maven from crashing when profiles are not activated -->
+        <meringue.logMutation></meringue.logMutation>
+        <meringue.debug></meringue.debug>
+        <meringue.otherArgs></meringue.otherArgs>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>edu.neu.ccs.prl.zeugma</groupId>
@@ -146,15 +153,24 @@
     </build>
     <profiles>
         <profile>
+            <id>build-argLine</id>
+            <activation>
+                <property>
+                    <name>!skipArgLineMerge</name>
+                </property>
+            </activation>
+            <properties>
+                <meringue.argLine>${meringue.logMutation} ${meringue.debug} ${meringue.otherArgs}</meringue.argLine>
+            </properties>
+        </profile>
+        <profile>
             <id>bedivfuzz-structure</id>
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
-                <meringue.argLine>
+                <meringue.otherArgs>
                     -Djqf.ei.SAVE_ONLY_VALID=true -Djqf.div.SAVE_ONLY_NEW_STRUCTURES=true
-                    -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true
-                    -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000
                     -Dreplay.directory=${meringue.outputDirectory}
-                </meringue.argLine>
+                </meringue.otherArgs>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
                 <meringue.testMethod>testWithSplitGenerator</meringue.testMethod>
             </properties>
@@ -169,15 +185,15 @@
             <build>
                 <plugins>
                     <plugin>
-                    <groupId>edu.neu.ccs.prl.meringue</groupId>
-                    <artifactId>meringue-maven-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>edu.neu.ccs.prl.zeugma</groupId>
-                            <artifactId>zeugma-evaluation-tools-BeDivFuzz</artifactId>
-                            <version>1.0.0-SNAPSHOT</version>
-                        </dependency>
-                    </dependencies>
+                        <groupId>edu.neu.ccs.prl.meringue</groupId>
+                        <artifactId>meringue-maven-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>edu.neu.ccs.prl.zeugma</groupId>
+                                <artifactId>zeugma-evaluation-tools-BeDivFuzz</artifactId>
+                                <version>1.0.0-SNAPSHOT</version>
+                            </dependency>
+                        </dependencies>
                     </plugin>
                 </plugins>
             </build>
@@ -186,7 +202,8 @@
             <id>bedivfuzz-simple</id>
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
-                <meringue.argLine>-Djqf.ei.SAVE_ONLY_VALID=true -Dreplay.directory=${meringue.outputDirectory}</meringue.argLine>
+                <meringue.otherArgs>
+                    -Djqf.ei.SAVE_ONLY_VALID=true -Dreplay.directory=${meringue.outputDirectory}</meringue.otherArgs>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
                 <meringue.testMethod>testWithSplitGenerator</meringue.testMethod>
             </properties>
@@ -263,11 +280,64 @@
             </build>
         </profile>
         <profile>
+            <id>ei</id>
+            <properties>
+                <!--suppress UnresolvedMavenProperty -->
+                <meringue.framework>edu.neu.ccs.prl.zeugma.EIFramework</meringue.framework>
+                <meringue.testMethod>testWithGenerator</meringue.testMethod>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>edu.neu.ccs.prl.meringue</groupId>
+                        <artifactId>meringue-maven-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>edu.neu.ccs.prl.zeugma</groupId>
+                                <artifactId>zeugma-evaluation-tools-EI</artifactId>
+                                <version>1.0.0-SNAPSHOT</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>zest</id>
             <properties>
-                <meringue.argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000</meringue.argLine>
-                <meringue.framework>edu.neu.ccs.prl.meringue.ZestFramework</meringue.framework>
+                <meringue.framework>edu.neu.ccs.prl.zeugma.ZestFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>edu.neu.ccs.prl.meringue</groupId>
+                        <artifactId>meringue-maven-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>edu.neu.ccs.prl.zeugma</groupId>
+                                <artifactId>zeugma-evaluation-tools-EI</artifactId>
+                                <version>1.0.0-SNAPSHOT</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>log-mutation</id>
+            <properties>
+                <meringue.logMutation>
+                    -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true
+                </meringue.logMutation>
+            </properties>
+        </profile>
+        <profile>
+            <id>debug</id>
+            <properties>
+                <meringue.otherArgs>
+                    -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005
+                </meringue.otherArgs>
             </properties>
         </profile>
         <profile>
@@ -275,7 +345,9 @@
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
-                <meringue.argLine>-Dzeugma.crossover=none</meringue.argLine>
+                <meringue.otherArgs>
+                    -Dzeugma.crossover=none
+                </meringue.otherArgs>
             </properties>
         </profile>
         <profile>
@@ -283,7 +355,7 @@
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
-                <meringue.argLine>-Dzeugma.crossover=linked</meringue.argLine>
+                <meringue.otherArgs>-Dzeugma.crossover=linked</meringue.otherArgs>
             </properties>
         </profile>
         <profile>
@@ -291,7 +363,7 @@
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
-                <meringue.argLine>-Dzeugma.crossover=linked -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true</meringue.argLine>
+                <meringue.otherArgs>-Dzeugma.crossover=linked -Djqf.ei.OBSERVE_MUTATION_DISTANCE=true</meringue.otherArgs>
             </properties>
         </profile>
         <profile>
@@ -299,7 +371,7 @@
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
-                <meringue.argLine>-Dzeugma.crossover=one_point</meringue.argLine>
+                <meringue.otherArgs>-Dzeugma.crossover=one_point</meringue.otherArgs>
             </properties>
         </profile>
         <profile>
@@ -307,7 +379,7 @@
             <properties>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.framework.ZeugmaFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
-                <meringue.argLine>-Dzeugma.crossover=two_point</meringue.argLine>
+                <meringue.otherArgs>-Dzeugma.crossover=two_point</meringue.otherArgs>
             </properties>
         </profile>
         <profile>
