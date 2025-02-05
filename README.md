@@ -13,7 +13,7 @@ A parametric fuzzer that uses call tree information to select crossover points.
 2. Set the JAVA_HOME environmental variable to the path of this OpenJDK 11 installation.
    For example, on Linux, run `export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64`.
 3. Clone or download this repository.
-4. In the root directory for this project, run `mvn -DskipTests install`.
+4. In the root directory for this project, run `bash ./setup.sh`.
 
 ## Running a Fuzzing Campaign
 
@@ -23,21 +23,21 @@ In the root directory of this project, run the following command:
 ```
 mvn -pl :zeugma-evaluation-tools \
   meringue:fuzz meringue:analyze \
-  -P<SUBJECT>,<FUZZER> \
+  -P<SUBJECT>,<FUZZER>[,log-mutation] \
   -Dmeringue.outputDirectory=<OUTPUT_DIRECTORY> \
   -Dmeringue.duration=<DURATION>
 ```
 
 Where:
 
-* \<SUBJECT\> is the fuzzing target: ant, bcel, closure, maven, nashorn, rhino, tomcat.
-* \<FUZZER\> is the fuzzer to be used: bedivfuzz-simple, bedivfuzz-structure, rlcheck, zest, zeugma-linked, zeugma-none,
-  zeugma-one_point, or zeugma-two_point.
+* \<SUBJECT\> is the fuzzing target: ant, closure, maven, rhino, chocopy, jython, gson, jackson.
+* \<FUZZER\> is the fuzzer to be used: bedivfuzz-simple, bedivfuzz-structure, ei, zest, zeugma-linked.
 * \<OUTPUT_DIRECTORY\> is the path of the directory to which campaign output files should be written.
   If a relative path is used, then the path will be resolved relative to the "zeugma-evaluation/zeugma-evaluation-tools"
   directory not the project root.
 * \<DURATION\> is the maximum amount of time to execute the fuzzing campaign for specified in the ISO-8601 duration
   format (e.g., "P2DT3H4M" represents 2 days, 3 hours, and 4 minutes).
+* If you provide profile `log-mutation`, the fuzzer will log the mutation distance in \<OUTPUT_DIRECTORY\>/mutation.log
 
 This command will first run a fuzzing campaign for the specified duration.
 Once this command has completed, the results of the campaign will be analyzed to collect coverage information
