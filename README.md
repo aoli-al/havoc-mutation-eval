@@ -12,7 +12,7 @@ A parametric fuzzer that uses call tree information to select crossover points.
 1. Ensure that some version of OpenJDK 11 is installed.
 2. Set the JAVA_HOME environmental variable to the path of this OpenJDK 11 installation.
    For example, on Linux, run `export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64`.
-3. Clone or download this repository.
+3. Clone or download this repository. To clone and fetch the appropriate submodules, run `git clone --recurse-submodules git@github.com:aoli-al/zeugma.git`
 4. In the root directory for this project, run `bash ./setup.sh`.
 
 ## Running a Fuzzing Campaign
