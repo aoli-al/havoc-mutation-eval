@@ -48,34 +48,45 @@ import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.w3c.dom.Document;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @RunWith(JQF.class)
 public class FuzzAnt {
-    private static final File file;
 
-    static {
-        try {
-            file = Files.createTempFile("build", ".xml").toFile();
-        } catch (IOException e) {
-            throw new ExceptionInInitializerError(e);
+    private File serializeInputStream(InputStream in) throws IOException {
+        Path path = Files.createTempFile("build", ".xml");
+        try (BufferedWriter out = Files.newBufferedWriter(path)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(new String(buffer, 0, bytesRead));
+            }
         }
+        return path.toFile();
     }
+
 
     @Fuzz
     public void testWithInputStream(InputStream in) {
+        File buildXml = null;
         try {
-            Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            buildXml = serializeInputStream(in);
             ProjectHelperImpl p = new ProjectHelperImpl();
-            p.parse(new Project(), file);
+            p.parse(new Project(), buildXml);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (BuildException e) {
             Assume.assumeNoException(e);
+        } finally {
+            if (buildXml != null) {
+                buildXml.delete();
+            }
         }
     }
 
@@ -83,7 +94,7 @@ public class FuzzAnt {
     public void testWithGenerator(@From(XmlDocumentGenerator.class)
                                   @Size(max = 10)
                                   @Dictionary("dictionaries/ant.dict")
-                                  Document document) {
+                                  String document) {
         testWithInputStream(FuzzUtil.toInputStream(document));
     }
 
