@@ -69,7 +69,7 @@ public class FuzzMaven {
     public void testWithGenerator(@From(XmlDocumentGenerator.class)
                                   @Size(max = 10)
                                   @Dictionary("dictionaries/maven.dict")
-                                  Document document) {
+                                  String document) {
         testWithInputStream(FuzzUtil.toInputStream(document));
     }
 

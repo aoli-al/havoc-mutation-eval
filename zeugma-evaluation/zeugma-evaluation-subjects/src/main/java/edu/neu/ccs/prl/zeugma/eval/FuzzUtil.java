@@ -7,12 +7,17 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public final class FuzzUtil {
     private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     private FuzzUtil() {
         throw new AssertionError();
+    }
+
+    public static InputStream toInputStream(String document) {
+        return new ByteArrayInputStream(document.getBytes(StandardCharsets.UTF_8));
     }
 
     public static InputStream toInputStream(Document document) {
