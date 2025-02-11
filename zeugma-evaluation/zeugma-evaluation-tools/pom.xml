@@ -444,7 +444,7 @@
             <properties>
                 <subject>jython</subject>
                 <gen.type>py.Python</gen.type>
-                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.</meringue.testClass>
+                <meringue.testClass>edu.neu.ccs.prl.zeugma.eval.FuzzJython</meringue.testClass>
                 <meringue.includedArtifacts>ignored</meringue.includedArtifacts>
             </properties>
         </profile>
