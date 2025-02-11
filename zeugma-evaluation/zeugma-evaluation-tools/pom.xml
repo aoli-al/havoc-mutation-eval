@@ -283,9 +283,20 @@
             <id>ei</id>
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
+                <meringue.otherArgs>
+                    -Djef.boo=01
+                </meringue.otherArgs>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.EIFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>edu.berkeley.cs.jqf</groupId>
+                    <artifactId>jqf-examples</artifactId>
+                    <version>2.1-ei</version>
+                    <classifier>tests</classifier>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
@@ -305,9 +316,20 @@
         <profile>
             <id>zest</id>
             <properties>
+                <meringue.otherArgs>
+                    -Djef.boo=01
+                </meringue.otherArgs>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.ZestFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>edu.berkeley.cs.jqf</groupId>
+                    <artifactId>jqf-examples</artifactId>
+                    <version>2.1-ei</version>
+                    <classifier>tests</classifier>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
