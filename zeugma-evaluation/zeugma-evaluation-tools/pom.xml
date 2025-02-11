@@ -203,7 +203,8 @@
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
                 <meringue.otherArgs>
-                    -Djqf.ei.SAVE_ONLY_VALID=true -Dreplay.directory=${meringue.outputDirectory}</meringue.otherArgs>
+                    -Djqf.ei.SAVE_ONLY_VALID=true -Dreplay.directory=${meringue.outputDirectory}
+                </meringue.otherArgs>
                 <meringue.framework>de.hub.se.jqf.fuzz.BeDivFuzzFramework</meringue.framework>
                 <meringue.testMethod>testWithSplitGenerator</meringue.testMethod>
             </properties>
@@ -284,7 +285,7 @@
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
                 <meringue.otherArgs>
-                    -Djef.boo=01
+                    -Dsomething
                 </meringue.otherArgs>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.EIFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
@@ -317,7 +318,7 @@
             <id>zest</id>
             <properties>
                 <meringue.otherArgs>
-                    -Djef.boo=01
+                    -Dsomething
                 </meringue.otherArgs>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.ZestFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
@@ -357,9 +358,9 @@
         <profile>
             <id>debug</id>
             <properties>
-                <meringue.otherArgs>
+                <meringue.debug>
                     -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005
-                </meringue.otherArgs>
+                </meringue.debug>
             </properties>
         </profile>
         <profile>
