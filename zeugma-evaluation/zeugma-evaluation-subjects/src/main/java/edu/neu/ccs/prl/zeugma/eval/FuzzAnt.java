@@ -102,7 +102,7 @@ public class FuzzAnt {
     public void testWithSplitGenerator(@From(SplitXmlDocumentGenerator.class)
                                        @Size(max = 10)
                                        @Dictionary("dictionaries/ant.dict")
-                                       Document document) {
+                                       String document) {
         testWithInputStream(FuzzUtil.toInputStream(document));
     }
 }

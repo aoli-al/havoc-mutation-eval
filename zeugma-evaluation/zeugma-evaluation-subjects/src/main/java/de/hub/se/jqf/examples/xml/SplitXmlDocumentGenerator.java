@@ -8,13 +8,13 @@ import org.w3c.dom.Document;
 /**
  * Placeholder excluded from final JAR.
  */
-public class SplitXmlDocumentGenerator extends Generator<Document> {
+public class SplitXmlDocumentGenerator extends Generator<String> {
     public SplitXmlDocumentGenerator() {
-        super(Document.class);
+        super(String.class);
     }
 
     @Override
-    public Document generate(SourceOfRandomness random, GenerationStatus status) {
+    public String generate(SourceOfRandomness random, GenerationStatus status) {
         throw new AssertionError("Placeholder method invoked");
     }
 }
