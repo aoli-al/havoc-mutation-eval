@@ -93,12 +93,23 @@ public class ParametricGuidance<T extends Individual> implements Guidance {
 
             String mutationLog = "";
             if (selected != null && OBSERVE_MUTATION_DISTANCE) {
+                String type;
+                Throwable failure = report.getFailure();
+                if (failure == null) {
+                    type = "SUCCESS";
+                } else {
+                    if (failure.getClass().getName().contains("AssumptionViolatedException")) {
+                        type = "INVALID";
+                    } else {
+                        type = "FAILURE";
+                    }
+                }
                 String parent = selected.getGeneratedInput();
                 String child = report.getGeneratedData();
                 int stringDistance = Math.getLevenshteinDistFromString(parent, child);
                 int byteDistance = Math.getLevenshteinDistFromByteList(selected.getInput(), report.getRecording());
                 mutationLog = child.length() + "," +  parent.length() + "," +
-                        byteDistance + "," + stringDistance + "," + saved + "," + "-1" + "," + "-1,-1";
+                        byteDistance + "," + stringDistance + "," + saved + "," + type + ",-1,-1,-1";
             }
             // Notify the manager that the execution finished
             manager.finishedExecution(report, coverageMap, mutationLog);

@@ -81,7 +81,7 @@ final class ParametricFuzzTarget implements FuzzTarget {
                 }
             }
         } catch (InputSizeException | AssumptionViolatedException ignored) {
-            return new TestReport(null, provider.getRecording(), this, "");
+            return new TestReport(ignored, provider.getRecording(), this, "");
         } catch (Throwable t) {
             return new TestReport(t, provider.getRecording(), this, "");
         } finally {
