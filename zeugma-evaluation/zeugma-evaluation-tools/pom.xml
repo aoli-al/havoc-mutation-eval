@@ -285,7 +285,7 @@
             <properties>
                 <!--suppress UnresolvedMavenProperty -->
                 <meringue.otherArgs>
-                    -Dsomething
+                    -Djqf.ei.HAVOC_PROBABILITY=0
                 </meringue.otherArgs>
                 <meringue.framework>edu.neu.ccs.prl.zeugma.EIFramework</meringue.framework>
                 <meringue.testMethod>testWithGenerator</meringue.testMethod>
