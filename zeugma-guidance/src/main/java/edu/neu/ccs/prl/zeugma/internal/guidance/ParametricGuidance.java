@@ -109,6 +109,7 @@ public class ParametricGuidance<T extends Individual> implements Guidance {
                 int stringDistance = Math.getLevenshteinDistFromString(parent, child);
                 int byteDistance = Math.getLevenshteinDistFromByteList(selected.getInput(), report.getRecording());
                 mutationLog = child.length() + "," +  parent.length() + "," +
+                        report.getRecording().size() + "," + selected.getInput().size() + "," +
                         byteDistance + "," + stringDistance + "," + saved + "," + type + ",-1,-1,-1";
             }
             // Notify the manager that the execution finished
