@@ -15,7 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeFalse;
 
 @RunWith(JQF.class)
 public class FuzzChocopy {
@@ -24,15 +24,17 @@ public class FuzzChocopy {
     @Fuzz
     public void testWithGenerator(@From(ChocoPySemanticGenerator.class) String code) {
         Program program = RefParser.process(code, false);
-        assumeTrue(!program.hasErrors());
-        RefAnalysis.process(program);
+        assumeFalse(program.hasErrors());
+        Program refTypedProgram = RefAnalysis.process(program);
+        assumeFalse(refTypedProgram.hasErrors());
     }
 
     @Fuzz
     public void testWithSplitGenerator(@From(SplitChocoPySemanticGenerator.class) String code) throws IOException {
         Program program = RefParser.process(code, false);
-        assumeTrue(!program.hasErrors());
-        RefAnalysis.process(program);
+        assumeFalse(program.hasErrors());
+        Program refTypedProgram = RefAnalysis.process(program);
+        assumeFalse(refTypedProgram.hasErrors());
     }
 
 }
