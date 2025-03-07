@@ -25,7 +25,7 @@ def get_commands():
     for config in CONFIGURATIONS:
         for algo in ALGOS:
             for iter in range(0, 4):
-                command = f"mvn -pl :zeugma-evaluation-tools meringue:analyze -P{config},{algo} -Dmeringue.outputDirectory=/data/aoli/havoc_eval/cov-test/{config}-{algo}-results-{iter}"
+                command = f"mvn -pl :zeugma-evaluation-tools meringue:analyze -P{config},{algo} -Dmeringue.outputDirectory=/data/aoli/havoc_eval/cov-test-3/{config}-{algo}-results-{iter}"
                 yield command
 
 with Pool(1) as p:
