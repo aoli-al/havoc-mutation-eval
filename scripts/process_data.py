@@ -135,7 +135,6 @@ def generate_perf_graph(data_dirs: List[str], algorithms: Set[str], out_folder: 
         # generate_corpus_exec_time(os.path.join(
         #     out_folder, f"{dataset}-{out_name}.pdf"), corpus_based_plot_data)
 
-
 def mann_whitney_u_test(treatment, control, alternative='two-sided', verbose=True):
     m = len(treatment)
     n = len(control)
@@ -229,6 +228,25 @@ def visualize_cov_distribution(output_dir: str, cov_data: Dict[str, Dict[str, Li
         generate_coverage_delta_hist(os.path.join(output_dir, dataset + "-delta-hist.pdf"),
                                         pd.DataFrame(data))
 
+def add_parent_result(df):
+    # Create a temporary dataframe without NaN IDs for the mapping
+    temp_df = df.dropna(subset=['id'])
+    
+    # Create a mapping of id to result (using only rows with valid IDs)
+    id_to_result = dict(zip(temp_df['id'], temp_df['result']))
+    
+    # Create the new column by mapping the parent to its result
+    df['parent_result'] = df['parent'].map(id_to_result)
+    
+    # Print rows with NaN parent_result values
+    nan_rows = df[df['parent_result'].isna()]
+    # if not nan_rows.empty:
+    #     print(f"Found {len(nan_rows)} rows with NaN parent_result values:")
+    #     display(nan_rows)
+    # else:
+    #     print("No rows with NaN parent_result values found.")
+    
+    return df
 
 def parse_mutation_distance_data(path: str, saved_only: List[bool], algorithms: List[str]) -> Dict[str, pd.DataFrame]:
     for dataset in DATASET:
@@ -238,16 +256,25 @@ def parse_mutation_distance_data(path: str, saved_only: List[bool], algorithms: 
                 for if_saved in saved_only:
                     data_path = os.path.join(path, f"{dataset}-{algorithm}-results-{i}", "campaign", "mutation.log")
                     if os.path.exists(data_path):
-                        data_frame = pd.read_csv(data_path, sep=",", names=["current_len", "parent_len", "byte_current_len", "byte_parent_len", "byte_distance", "distance", "saved", "result", "parent", "id", "file"], na_values=-1)
+                        if algorithm == "zest-mini" or algorithm == "random" or dataset == "chocopy":
+                            data_frame = pd.read_csv(data_path, sep=",", na_values=-1)
+                            data_frame.columns = ["current_len", "parent_len", "byte_current_len", "byte_parent_len", "byte_distance", "distance", "saved", "result", "parent", "id", "file"]
+                        else:
+                            data_frame = pd.read_csv(data_path, sep=",", names=["current_len",
+                                                                                "parent_len", "byte_current_len", "byte_parent_len", "byte_distance", "distance", "saved", "result", "parent", "id", "file"], na_values=-1)
+                        # prit(algorithm, dataset)
+                        data_frame = add_parent_result(data_frame)
                         data_frame["algorithm"] = algorithm + ("-saved_only" if if_saved else "")
                         # data_frame = data_frame[data_frame["distance"] != 0]
                         if if_saved:
                             data_frame = data_frame[data_frame["saved"]]
+                        print(dataset, algorithm)
                         data_frame["max_length_bytes"] = np.maximum.reduce(data_frame[[f"byte_current_len", f"byte_parent_len"]].values, axis=1)
                         data_frame["max_length_string"] = np.maximum.reduce(data_frame[[f"current_len", f"parent_len"]].values, axis=1)
                         data_frame["mutation_bytes"] = data_frame[f"byte_distance"] / data_frame["max_length_bytes"]
                         data_frame["mutation_string"] = data_frame[f"distance"] / data_frame["max_length_string"]
-                        data_frame.drop(columns=["current_len", "parent_len", "saved", "parent", "id"])
+
+                        # data_frame.drop(columns=["saved", "parent", "id"])
                         data_frame.dropna(subset = ['mutation_bytes'], inplace=True)
                         data_frame.dropna(subset = ['mutation_string'], inplace=True)
                         if not if_saved and len(data_frame) > 100000:
@@ -270,7 +297,7 @@ def parse_and_visualize_mutation_data(path: str, saved_only: List[bool], generat
 
 def process_mutation_data(path: str, saved_only: List[bool], algorithms: List[str], df_name: str):
     df_dict = {}
-    attributes = ['mutation_bytes', 'mutation_string', 'algorithm']
+    attributes = ['mutation_bytes', 'mutation_string', 'algorithm', 'current_len', 'parent_len', 'saved', 'parent', 'result', 'parent_result']
 
     for name, df in parse_mutation_distance_data(path, saved_only, algorithms):
         print('processing {}...'.format(name))
