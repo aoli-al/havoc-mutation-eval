@@ -231,13 +231,13 @@ def visualize_cov_distribution(output_dir: str, cov_data: Dict[str, Dict[str, Li
 def add_parent_result(df):
     # Create a temporary dataframe without NaN IDs for the mapping
     temp_df = df.dropna(subset=['id'])
-    
+
     # Create a mapping of id to result (using only rows with valid IDs)
     id_to_result = dict(zip(temp_df['id'], temp_df['result']))
-    
+
     # Create the new column by mapping the parent to its result
     df['parent_result'] = df['parent'].map(id_to_result)
-    
+
     # Print rows with NaN parent_result values
     nan_rows = df[df['parent_result'].isna()]
     # if not nan_rows.empty:
@@ -245,7 +245,7 @@ def add_parent_result(df):
     #     display(nan_rows)
     # else:
     #     print("No rows with NaN parent_result values found.")
-    
+
     return df
 
 def parse_mutation_distance_data(path: str, saved_only: List[bool], algorithms: List[str]) -> Dict[str, pd.DataFrame]:
@@ -256,7 +256,7 @@ def parse_mutation_distance_data(path: str, saved_only: List[bool], algorithms: 
                 for if_saved in saved_only:
                     data_path = os.path.join(path, f"{dataset}-{algorithm}-results-{i}", "campaign", "mutation.log")
                     if os.path.exists(data_path):
-                        if algorithm == "zest-mini" or algorithm == "random" or dataset == "chocopy":
+                        if "zest" in algorithm or "ei" in algorithm or "random" in algorithm:
                             data_frame = pd.read_csv(data_path, sep=",", na_values=-1)
                             data_frame.columns = ["current_len", "parent_len", "byte_current_len", "byte_parent_len", "byte_distance", "distance", "saved", "result", "parent", "id", "file"]
                         else:
