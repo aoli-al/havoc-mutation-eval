@@ -102,7 +102,7 @@ public final class CampaignOutput {
     }
 
     public static File getCorpusDirectory(File outputDirectory) {
-        return new File(outputDirectory, "corpus");
+        return new File(outputDirectory, "corpus_trial_controlled");
     }
 
     public static File getGenDirectory(File outputDirectory) {

@@ -2,6 +2,7 @@ import json
 import os
 import pathlib
 import sys
+import shutil
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -44,23 +45,31 @@ class Campaign:
         self.summary_file = os.path.join(campaign_dir, SUMMARY_FILE_NAME)
         self.failures_file = os.path.join(campaign_dir, FAILURES_FILE_NAME)
         self.plot_data_file = os.path.join(campaign_dir, PLOT_DATA_FILE)
-        
+        self.corpus_dir = os.path.join(campaign_dir, "campaign", "corpus")
+
         if not os.path.exists(self.plot_data_file):
             self.plot_data_file = os.path.join(campaign_dir, ZEUGMA_PLOT_DATA_FILE)
-        
-        self.valid = all(os.path.exists(f) for f in [self.plot_data_file]) and \
-                    all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
-        
+
+        self.valid = os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir)
+                    # all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
+        if not self.valid:
+            print(f"INVALID: {self.id}")
+            print(f"Plot data file: {self.plot_data_file}, {os.path.exists(self.plot_data_file)}")
+            print(f"Corpus dir: {self.corpus_dir}, {os.path.exists(self.corpus_dir)}")
+
+
         if self.valid:
-            with open(self.summary_file, 'r') as f:
-                summary = json.load(f)
-                self.subject = summary['configuration']['testClassName'].split('.')[-1].replace('Fuzz', '')
-                self.fuzzer = Campaign.get_fuzzer(summary)
-                self.duration = summary['configuration']['duration']
-            
+            # with open(self.summary_file, 'r') as f:
+            #     summary = json.load(f)
+            self.subject = self.id.split("-")[0].strip()
+            # self.fuzzer = Campaign.get_fuzzer(summary)
+            # self.duration = summary['configuration']['duration']
+
             # Initialize executions and corpus_size attributes
             self.executions = 0
             self.corpus_size = 0
+            self.execution_time = 0  # Time to reach the execution count (in seconds)
+            self.corpus_time_size = 0  # Number of files in corpus within the time limit
 
     @staticmethod
     def get_fuzzer(summary):
@@ -90,7 +99,7 @@ class Campaign:
     def get_coverage_data(self):
         df = pd.read_csv(self.coverage_file) \
             .rename(columns=lambda x: x.strip())
-        
+
         df['time'] = pd.to_timedelta(df['time'], 'ms')
         self.add_trial_info(df)
         return df
@@ -100,57 +109,126 @@ class Campaign:
         if not os.path.exists(self.plot_data_file):
             print(f"Warning: Plot data file does not exist for campaign {self.id}")
             return
-        
+
         try:
             with open(self.plot_data_file, 'r') as f:
                 last_line = f.readlines()[-1].strip()
             # print(self.fuzzer)
             # print(last_line)
-                
-            if self.fuzzer == "Zeugma-Link":
+
+            if "zeugma" in self.id:
                 # For Zeugma-Link, executions is the 4th column
                 self.executions = int(last_line.split(",")[3])
-            elif self.fuzzer == "BeDiv-Struct" or self.fuzzer == "BeDiv-Simple":
+            elif "bediv" in self.id:
                 # For BeDivFuzz-Struct, executions is the 5th column
                 self.executions = int(last_line.split(",")[4])
             else:
                 # For other fuzzers, executions is the sum of 12th and 13th columns
                 split = last_line.split(",")
                 self.executions = int(split[11]) + int(split[12])
-                
+
             return self.executions
         except Exception as e:
             print(f"Error parsing executions for campaign {self.id}: {str(e)}")
             return 0
 
+    def get_time_for_executions(self, execution_count):
+        """
+        Get the time it took to reach a specific execution count.
+        For Zeugma, the time is in the first column (milliseconds).
+        For other fuzzers, the first column is unix timestamp, so we subtract the first row's timestamp.
+        Returns time in seconds.
+        """
+        if not os.path.exists(self.plot_data_file):
+            print(f"Warning: Plot data file does not exist for campaign {self.id}")
+            return 0
+
+        try:
+            lines = []
+            with open(self.plot_data_file, 'r') as f:
+                lines = f.readlines()
+
+            # Skip header if it exists
+            start_idx = 1 if len(lines) > 1 and not lines[0][0].isdigit() else 0
+
+            first_timestamp = None
+            last_valid_timestamp = None
+
+            for line in lines[start_idx:]:
+                split = line.strip().split(",")
+
+                # Get the timestamp/time from the first column
+                timestamp = float(split[0])
+                if first_timestamp is None:
+                    first_timestamp = timestamp
+
+                # Get execution count based on campaign type
+                if "zeugma" in self.id:
+                    # Time directly in milliseconds for Zeugma
+                    executions = int(split[3])
+                    if executions <= execution_count:
+                        last_valid_timestamp = timestamp
+                    else:
+                        break
+                elif "bediv" in self.id:
+                    executions = int(split[4])
+                    if executions <= execution_count:
+                        last_valid_timestamp = timestamp
+                    else:
+                        break
+                else:
+                    executions = int(split[11]) + int(split[12])
+                    if executions <= execution_count:
+                        last_valid_timestamp = timestamp
+                    else:
+                        break
+
+            if last_valid_timestamp is not None:
+                if "zeugma" in self.id:
+                    # For Zeugma, time is already in milliseconds, convert to seconds
+                    time_seconds = last_valid_timestamp / 1000.0
+                else:
+                    # For other fuzzers, subtract first timestamp (unix time) to get elapsed time in seconds
+                    time_seconds = last_valid_timestamp - first_timestamp
+
+                self.execution_time = time_seconds
+                return time_seconds
+            else:
+                print(f"Warning: No valid time found for execution count {execution_count} in campaign {self.id}")
+                return 0
+
+        except Exception as e:
+            print(f"Error calculating time for campaign {self.id}: {str(e)}")
+            return 0
+
     def get_corpus_size_at_execution_limit(self, execution_limit):
         """
-        Parse the plot_data file to get the corpus size at the last row 
+        Parse the plot_data file to get the corpus size at the last row
         that does not exceed the execution limit.
         """
         if not os.path.exists(self.plot_data_file):
             print(f"Warning: Plot data file does not exist for campaign {self.id}")
             return 0
-        
+
         try:
             lines = []
             with open(self.plot_data_file, 'r') as f:
                 lines = f.readlines()
-            
+
             # Skip header if it exists
             start_idx = 1 if len(lines) > 1 and not lines[0][0].isdigit() else 0
-            
+
             last_valid_line = None
             for line in lines[start_idx:]:
                 split = line.strip().split(",")
-                
-                if self.fuzzer == "Zeugma-Link":
+
+                if "zeugma" in self.id:
                     executions = int(split[3])
                     if executions <= execution_limit:
                         last_valid_line = split
                     else:
                         break
-                elif self.fuzzer == "BeDiv-Struct" or self.fuzzer == "BeDiv-Simple":
+                elif "bediv" in self.id:
                     executions = int(split[4])
                     if executions <= execution_limit:
                         last_valid_line = split
@@ -162,25 +240,70 @@ class Campaign:
                         last_valid_line = split
                     else:
                         break
-            
+
             if last_valid_line:
-                if self.fuzzer == "Zeugma-Link":
+                if "zeugma" in self.id:
                     # Corpus size is the 5th column for Zeugma-Link
                     self.corpus_size = int(last_valid_line[4])
-                elif self.fuzzer == "BeDiv-Struct" or self.fuzzer == "BeDiv-Simple":
+                elif "bediv" in self.id:
                     # For BeDiv-Struct, corpus size is the 6th column
                     self.corpus_size = int(last_valid_line[6])
                 else:
                     # Corpus size is the 4th column for other fuzzers
                     self.corpus_size = int(last_valid_line[3])
-                    
+
                 return self.corpus_size
             else:
                 print(f"Warning: No valid line found within execution limit for campaign {self.id}")
                 return 0
-                
+
         except Exception as e:
             print(f"Error parsing corpus size for campaign {self.id}: {str(e)}")
+            return 0
+
+    def get_corpus_size_at_time_limit(self, time_limit_seconds):
+        """
+        Count the number of corpus files that were created within the time limit.
+        
+        Args:
+            time_limit_seconds: Time limit in seconds from the first file's creation time
+            
+        Returns:
+            Number of corpus files created within the time limit
+        """
+        import os
+        import time
+        
+        if not os.path.exists(self.corpus_dir):
+            print(f"Warning: Corpus directory does not exist for campaign {self.id}")
+            return 0
+            
+        try:
+            # Get all files in the corpus directory
+            corpus_files = [os.path.join(self.corpus_dir, f) for f in os.listdir(self.corpus_dir) 
+                           if os.path.isfile(os.path.join(self.corpus_dir, f))]
+            
+            if not corpus_files:
+                print(f"Warning: No corpus files found for campaign {self.id}")
+                return 0
+                
+            # Sort files by modification time
+            corpus_files.sort(key=lambda f: os.path.getmtime(f))
+            
+            # Get the modification time of the first file
+            start_time = os.path.getmtime(corpus_files[0])
+            
+            # Calculate the end time as start_time + time_limit
+            end_time = start_time + time_limit_seconds
+            
+            # Count files with modification time <= end_time
+            count = sum(1 for f in corpus_files if os.path.getmtime(f) <= end_time)
+            
+            self.corpus_time_size = count
+            return count
+            
+        except Exception as e:
+            print(f"Error calculating corpus size at time limit for campaign {self.id}: {str(e)}")
             return 0
 
     def get_failure_data(self):
@@ -242,7 +365,7 @@ def find_min_executions_per_benchmark(campaigns):
     for campaign in campaigns:
         if campaign.executions > 0:  # Only consider campaigns with valid execution counts
             min_executions[campaign.subject] = min(min_executions[campaign.subject], campaign.executions)
-    
+
     # Convert from defaultdict to regular dict and handle the case where no valid executions were found
     result = {}
     for benchmark, min_exec in min_executions.items():
@@ -251,44 +374,77 @@ def find_min_executions_per_benchmark(campaigns):
         else:
             print(f"\tWarning: No valid execution counts found for benchmark {benchmark}")
             result[benchmark] = 0
-    
+            
     print(f'\tMinimum executions per benchmark: {result}')
     return result
 
 
 def get_corpus_sizes_at_execution_limits(campaigns, min_executions_per_benchmark):
     """
-    Parse plot_data files again to get corpus sizes at the minimum execution count for each benchmark.
+    Parse plot_data files again to get corpus sizes and time at the minimum execution count for each benchmark.
+    For each campaign, finds the latest row that has executions <= min_executions and extracts both
+    the corpus size and the time it took to reach that point.
     """
     print(f'Getting corpus sizes at execution limits.')
     for campaign in campaigns:
         benchmark = campaign.subject
         execution_limit = min_executions_per_benchmark.get(benchmark, 0)
-        
+
         if execution_limit > 0:
+            # Get corpus size at the execution limit
             campaign.get_corpus_size_at_execution_limit(execution_limit)
+            
+            # Get the time it took to reach this execution limit
+            campaign.get_time_for_executions(execution_limit)
         else:
             print(f"\tSkipping corpus size calculation for campaign {campaign.id} due to zero execution limit")
-    
-    print(f'\tFinished getting corpus sizes.')
+
+    print(f'\tFinished getting corpus sizes and times.')
+    return campaigns
+
+
+def get_corpus_sizes_at_time_limits(campaigns, min_executions_per_benchmark):
+    """
+    For each campaign, find the time it took to reach the benchmark's minimum execution count,
+    then count corpus files created within that time period based on file modification times.
+    """
+    print(f'Getting corpus sizes based on time limits.')
+    for campaign in campaigns:
+        benchmark = campaign.subject
+        execution_limit = min_executions_per_benchmark.get(benchmark, 0)
+
+        if execution_limit > 0:
+            # First, get the time it took to reach the execution limit
+            time_limit_seconds = campaign.get_time_for_executions(execution_limit)
+            
+            if time_limit_seconds > 0:
+                # Then, count corpus files within that time limit
+                campaign.get_corpus_size_at_time_limit(time_limit_seconds)
+            else:
+                print(f"\tSkipping corpus size calculation for campaign {campaign.id} due to zero time limit")
+        else:
+            print(f"\tSkipping corpus size calculation for campaign {campaign.id} due to zero execution limit")
+
+    print(f'\tFinished getting corpus sizes based on time limits.')
     return campaigns
 
 
 def create_corpus_size_csv(campaigns, output_dir):
-    """Create a CSV file with corpus size information."""
+    """Create a CSV file with corpus size information for both methods (execution-based and time-based)."""
     file = os.path.join(output_dir, 'corpus_sizes.csv')
     print('Creating corpus size CSV.')
-    
+
     data = []
     for c in campaigns:
         data.append({
             'campaign_id': c.id,
-            'fuzzer': c.fuzzer,
             'subject': c.subject,
             'executions': c.executions,
-            'corpus_size': c.corpus_size
+            'execution_based_corpus_size': c.corpus_size,
+            'time_to_execution_limit': c.execution_time,
+            'time_based_corpus_size': c.corpus_time_size
         })
-    
+
     df = pd.DataFrame(data)
     df.to_csv(file, index=False)
     print(f'\tWrote corpus size CSV to {file}.')
@@ -297,58 +453,77 @@ def create_corpus_size_csv(campaigns, output_dir):
 
 def copy_controlled_corpus_files(input_dir, output_dir):
     """
-    Copy a controlled set of corpus files based on the corpus_size in the CSV.
-    For each campaign, copies the first corpus_size files to a new directory.
+    Copy a controlled set of corpus files based on the time_based_corpus_size in the CSV.
+    For each campaign, sorts the files by modification time and copies those created 
+    within the time limit to a new directory.
     """
     corpus_sizes_file = os.path.join(output_dir, 'corpus_sizes.csv')
     print(f'Copying controlled corpus files based on {corpus_sizes_file}')
-    
+
     if not os.path.exists(corpus_sizes_file):
         print(f"\tError: Corpus sizes file does not exist: {corpus_sizes_file}")
         return
-    
+
     try:
         # Read the corpus sizes CSV
         corpus_df = pd.read_csv(corpus_sizes_file)
-        
+
         for _, row in corpus_df.iterrows():
             campaign_id = row['campaign_id']
-            corpus_size = int(row['corpus_size'])
-            
+            time_limit = float(row['time_to_execution_limit'])
+            time_based_corpus_size = int(row['time_based_corpus_size'])
+
             # Define source and destination directories
             source_dir = os.path.join(input_dir, campaign_id, 'campaign', 'corpus')
             dest_dir = os.path.join(input_dir, campaign_id, 'campaign', 'corpus_trial_controlled')
-            
+
+            if os.path.exists(dest_dir):
+                # Remove existing destination directory
+                shutil.rmtree(dest_dir)
+
             if not os.path.isdir(source_dir):
                 print(f"\tWarning: Source corpus directory does not exist: {source_dir}")
                 continue
-            
+
             # Create destination directory if it doesn't exist
             os.makedirs(dest_dir, exist_ok=True)
-            
-            # Get all files in the source directory and sort by filename
+
+            # Get all files in the source directory
             try:
-                corpus_files = sorted([f for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f))])
+                all_files = [os.path.join(source_dir, f) for f in os.listdir(source_dir) 
+                            if os.path.isfile(os.path.join(source_dir, f))]
                 
-                # Take only the first corpus_size files
-                files_to_copy = corpus_files[:corpus_size]
+                if not all_files:
+                    print(f"\tWarning: No corpus files found for campaign {campaign_id}")
+                    continue
                 
-                print(f"\tCopying {len(files_to_copy)} files (out of {len(corpus_files)}) for campaign {campaign_id}")
+                # Sort files by modification time
+                all_files.sort(key=lambda f: os.path.getmtime(f))
                 
+                # Get the modification time of the first file
+                start_time = os.path.getmtime(all_files[0])
+                
+                # Calculate the end time as start_time + time_limit
+                end_time = start_time + time_limit
+                
+                # Filter files to those modified before end_time
+                files_to_copy = [f for f in all_files if os.path.getmtime(f) <= end_time]
+                
+                print(f"\tCopying {len(files_to_copy)} files (out of {len(all_files)}) for campaign {campaign_id}")
+
                 # Copy the files
-                import shutil
-                for file in files_to_copy:
-                    source_file = os.path.join(source_dir, file)
-                    dest_file = os.path.join(dest_dir, file)
+                for source_file in files_to_copy:
+                    file_name = os.path.basename(source_file)
+                    dest_file = os.path.join(dest_dir, file_name)
                     shutil.copy2(source_file, dest_file)
-                
+
                 print(f"\tSuccessfully copied files to {dest_dir}")
-                
+
             except Exception as e:
                 print(f"\tError copying files for campaign {campaign_id}: {str(e)}")
-        
+
         print(f'\tFinished copying controlled corpus files.')
-        
+
     except Exception as e:
         print(f"\tError processing corpus sizes CSV: {str(e)}")
 
@@ -447,43 +622,46 @@ def extract_detections_data(campaigns, output_dir):
 def extract_corpus_size_data(campaigns, output_dir):
     # First, get execution counts for all campaigns
     campaigns = get_executions_for_all_campaigns(campaigns)
-    
+
     # Find minimum executions per benchmark
     min_executions = find_min_executions_per_benchmark(campaigns)
-    
-    # Get corpus sizes at the execution limits
+
+    # First approach: Get corpus sizes at execution limits
     campaigns = get_corpus_sizes_at_execution_limits(campaigns, min_executions)
     
-    # Create and save corpus size CSV
+    # Second approach: Get corpus sizes at time limits based on file modification times
+    campaigns = get_corpus_sizes_at_time_limits(campaigns, min_executions)
+
+    # Create and save corpus size CSV with both methods
     return create_corpus_size_csv(campaigns, output_dir)
 
 
 def extract_data(input_dir, output_dir):
-    print("Extracting more data")
-    times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
-    campaigns = read_campaigns(input_dir)
-    os.makedirs(output_dir, exist_ok=True)
-    
+    # print("Extracting more data")
+    # times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
+    # campaigns = read_campaigns(input_dir)
+    # os.makedirs(output_dir, exist_ok=True)
+
     # Extract corpus size data (new functionality)
-    print("Extracting corpus data")
-    corpus_data = extract_corpus_size_data(campaigns, output_dir)
-    print("Extracted corpus data")
-    
-    # Copy controlled corpus files based on corpus sizes
+    # print("Extracting corpus data")
+    # corpus_data = extract_corpus_size_data(campaigns, output_dir)
+    # print("Extracted corpus data")
+
+    # Copy controlled corpus files based on time-based corpus sizes
     copy_controlled_corpus_files(input_dir, output_dir)
-    
+
     # Extract existing data
-    coverage_data = extract_coverage_data(campaigns, times, output_dir)
-    detections_data = extract_detections_data(campaigns, output_dir)
-    
-    return coverage_data, detections_data, corpus_data
+    # coverage_data = extract_coverage_data(campaigns, times, output_dir)
+    # detections_data = extract_detections_data(campaigns, output_dir)
+
+    return corpus_data
 
 
 def main():
     if len(sys.argv) < 3:
         print("Usage: python script.py <input_dir> <output_dir>")
         sys.exit(1)
-    
+
     extract_data(sys.argv[1], sys.argv[2])
 
 
