@@ -19,6 +19,7 @@
         <meringue.logMutation></meringue.logMutation>
         <meringue.debug></meringue.debug>
         <meringue.otherArgs></meringue.otherArgs>
+        <meringue.verbose>true</meringue.verbose>
     </properties>
     <dependencies>
         <dependency>
