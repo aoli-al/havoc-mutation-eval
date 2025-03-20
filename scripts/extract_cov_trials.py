@@ -12,8 +12,8 @@ import pandas as pd
 FAILURES_FILE_NAME = 'failures.json'
 SUMMARY_FILE_NAME = 'summary.json'
 COVERAGE_FILE_NAME = 'coverage.csv'
-PLOT_DATA_FILE = 'campaign/plot_data'
-ZEUGMA_PLOT_DATA_FILE = 'campaign/statistics.csv'
+PLOT_DATA_FILE_NAME = 'campaign/plot_data'
+ZEUGMA_PLOT_DATA_FILE_NAME = 'campaign/statistics.csv'
 
 
 @dataclass(order=True, frozen=True)
@@ -44,11 +44,11 @@ class Campaign:
         self.coverage_file = os.path.join(campaign_dir, COVERAGE_FILE_NAME)
         self.summary_file = os.path.join(campaign_dir, SUMMARY_FILE_NAME)
         self.failures_file = os.path.join(campaign_dir, FAILURES_FILE_NAME)
-        self.plot_data_file = os.path.join(campaign_dir, PLOT_DATA_FILE)
+        self.plot_data_file = os.path.join(campaign_dir, PLOT_DATA_FILE_NAME)
         self.corpus_dir = os.path.join(campaign_dir, "campaign", "corpus")
 
         if not os.path.exists(self.plot_data_file):
-            self.plot_data_file = os.path.join(campaign_dir, ZEUGMA_PLOT_DATA_FILE)
+            self.plot_data_file = os.path.join(campaign_dir, ZEUGMA_PLOT_DATA_FILE_NAME)
 
         self.valid = os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir)
                     # all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
@@ -322,6 +322,50 @@ class Campaign:
             df = df[['type', 'trace', 'detection_time', 'inducing_inputs']]
         self.add_trial_info(df)
         return df
+        
+    def get_total_runtime(self):
+        """
+        Calculate the total runtime of the campaign.
+        For Zeugma, the time is in the first column (milliseconds).
+        For other fuzzers, the first column is unix timestamp, so we subtract first row from last row.
+        Returns time in seconds.
+        """
+        if not os.path.exists(self.plot_data_file):
+            print(f"Warning: Plot data file does not exist for campaign {self.id}")
+            return 0
+
+        try:
+            lines = []
+            with open(self.plot_data_file, 'r') as f:
+                lines = f.readlines()
+
+            # Skip header if it exists
+            start_idx = 1 if len(lines) > 1 and not lines[0][0].isdigit() else 0
+            
+            if start_idx >= len(lines):
+                print(f"Warning: No data rows in plot data file for campaign {self.id}")
+                return 0
+                
+            # Get first and last timestamp
+            first_line = lines[start_idx].strip().split(",")
+            last_line = lines[-1].strip().split(",")
+            
+            first_timestamp = float(first_line[0])
+            last_timestamp = float(last_line[0])
+            
+            if "zeugma" in self.id:
+                # For Zeugma, time is directly in milliseconds, convert to seconds
+                # The last timestamp is the total elapsed time
+                runtime_seconds = last_timestamp / 1000.0
+            else:
+                # For other fuzzers, subtract first timestamp from last (unix timestamps)
+                runtime_seconds = last_timestamp - first_timestamp
+                
+            return runtime_seconds
+            
+        except Exception as e:
+            print(f"Error calculating total runtime for campaign {self.id}: {str(e)}")
+            return 0
 
 
 def find_campaigns(input_dir):
@@ -512,6 +556,7 @@ def copy_controlled_corpus_files(input_dir, output_dir):
                 print(f"\tCopying {len(files_to_copy)} files (out of {len(all_files)}) for campaign {campaign_id}")
 
                 # Copy the files
+                import shutil
                 for source_file in files_to_copy:
                     file_name = os.path.basename(source_file)
                     dest_file = os.path.join(dest_dir, file_name)
@@ -625,6 +670,9 @@ def extract_corpus_size_data(campaigns, output_dir):
 
     # Find minimum executions per benchmark
     min_executions = find_min_executions_per_benchmark(campaigns)
+    
+    # Write campaign trials summary CSV - NEW
+    create_campaign_trials_summary(campaigns, output_dir)
 
     # First approach: Get corpus sizes at execution limits
     campaigns = get_corpus_sizes_at_execution_limits(campaigns, min_executions)
@@ -636,19 +684,126 @@ def extract_corpus_size_data(campaigns, output_dir):
     return create_corpus_size_csv(campaigns, output_dir)
 
 
+def create_campaign_trials_summary(campaigns, output_dir):
+    """Create a CSV with all campaigns and their trials per benchmark, plus summary statistics per technique."""
+    print('Creating campaign trials summary CSV.')
+    
+    # Calculate total runtime for each campaign
+    for campaign in campaigns:
+        campaign.total_runtime = campaign.get_total_runtime()
+    
+    # Extract technique name from campaign ID
+    for campaign in campaigns:
+        # Extract fuzzer technique from campaign ID
+        id_parts = campaign.id.lower().split('-')
+        # Skip the subject and get the technique part
+        technique = None
+        for part in id_parts[1:]:
+            if any(tech in part for tech in ['zeugma', 'bediv', 'zest', 'ei', 'random']):
+                technique = part
+                break
+
+        campaign.technique = technique
+    
+    # Create a dataframe with detailed campaign information
+    data = []
+    for c in campaigns:
+        data.append({
+            'campaign_id': c.id,
+            'benchmark': c.subject,
+            'technique': c.technique,
+            'executions': c.executions,
+            'corpus_size': c.corpus_size,
+            'time_to_exec_limit': c.execution_time,
+            'time_based_corpus_size': c.corpus_time_size,
+            'total_runtime': c.total_runtime  # Add total runtime
+        })
+    
+    detail_df = pd.DataFrame(data)
+    
+    # Identify campaigns with total runtime significantly less than 86400 seconds (24 hours)
+    threshold = 86400 * 0.99  # 99% of 24 hours, allowing for some margin
+    short_runtime_campaigns = detail_df[detail_df['total_runtime'] < threshold]
+    
+    # Write the short runtime campaigns to a file, grouped by benchmark and technique
+    short_runtime_file = os.path.join(output_dir, 'short_runtime_campaigns.txt')
+    with open(short_runtime_file, 'w') as f:
+        # Write header with total count
+        total_short_campaigns = len(short_runtime_campaigns)
+        f.write(f"Total campaigns with runtime < 99% of 24 hours: {total_short_campaigns}\n\n")
+        
+        # Group by benchmark and technique
+        grouped = short_runtime_campaigns.groupby(['benchmark', 'technique'])
+        
+        for (benchmark, technique), group in grouped:
+            f.write(f"Benchmark: {benchmark}, Technique: {technique}\n")
+            f.write(f"Count: {len(group)}\n")
+            f.write("-" * 80 + "\n")
+            
+            # Sort by runtime
+            sorted_group = group.sort_values(by='total_runtime')
+            
+            for _, row in sorted_group.iterrows():
+                f.write(f"  {row['campaign_id']}: {row['total_runtime']:.2f} seconds ({row['total_runtime']/3600:.2f} hours)\n")
+            
+            f.write("\n")
+    
+    print(f"\tIdentified {total_short_campaigns} campaigns with shorter than expected runtime. Details written to {short_runtime_file}")
+    
+    # Write the detailed campaign info to CSV
+    detail_file = os.path.join(output_dir, 'campaign_trials_detail.csv')
+    detail_df.to_csv(detail_file, index=False)
+    print(f'\tWrote detailed campaign trials to {detail_file}.')
+    
+    # Calculate summary statistics per technique per benchmark
+    summary_data = []
+    for benchmark in detail_df['benchmark'].unique():
+        benchmark_df = detail_df[detail_df['benchmark'] == benchmark]
+        
+        for technique in benchmark_df['technique'].unique():
+            technique_df = benchmark_df[benchmark_df['technique'] == technique]
+            
+            # Calculate statistics
+            summary_data.append({
+                'benchmark': benchmark,
+                'technique': technique,
+                'num_trials': len(technique_df),
+                'avg_executions': technique_df['executions'].mean(),
+                'median_executions': technique_df['executions'].median(),
+                'min_executions': technique_df['executions'].min(),
+                'max_executions': technique_df['executions'].max(),
+                'avg_corpus_size': technique_df['corpus_size'].mean(),
+                'median_corpus_size': technique_df['corpus_size'].median(),
+                'avg_time_based_corpus_size': technique_df['time_based_corpus_size'].mean(),
+                'median_time_based_corpus_size': technique_df['time_based_corpus_size'].median(),
+                'avg_time_to_exec_limit': technique_df['time_to_exec_limit'].mean(),
+                'median_time_to_exec_limit': technique_df['time_to_exec_limit'].median(),
+                'avg_total_runtime': technique_df['total_runtime'].mean(),  # Add avg total runtime
+                'median_total_runtime': technique_df['total_runtime'].median(),  # Add median total runtime
+            })
+    
+    # Create summary dataframe and write to CSV
+    summary_df = pd.DataFrame(summary_data)
+    summary_file = os.path.join(output_dir, 'technique_benchmark_summary.csv')
+    summary_df.to_csv(summary_file, index=False)
+    print(f'\tWrote technique/benchmark summary to {summary_file}.')
+    
+    return detail_df, summary_df
+
+
 def extract_data(input_dir, output_dir):
-    # print("Extracting more data")
-    # times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
-    # campaigns = read_campaigns(input_dir)
-    # os.makedirs(output_dir, exist_ok=True)
+    print("Extracting more data")
+    times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
+    campaigns = read_campaigns(input_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Extract corpus size data (new functionality)
-    # print("Extracting corpus data")
-    # corpus_data = extract_corpus_size_data(campaigns, output_dir)
-    # print("Extracted corpus data")
+    print("Extracting corpus data")
+    corpus_data = extract_corpus_size_data(campaigns, output_dir)
+    print("Extracted corpus data")
 
     # Copy controlled corpus files based on time-based corpus sizes
-    copy_controlled_corpus_files(input_dir, output_dir)
+    # copy_controlled_corpus_files(input_dir, output_dir)
 
     # Extract existing data
     # coverage_data = extract_coverage_data(campaigns, times, output_dir)
