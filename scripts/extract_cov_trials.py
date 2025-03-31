@@ -264,44 +264,44 @@ class Campaign:
     def get_corpus_size_at_time_limit(self, time_limit_seconds):
         """
         Count the number of corpus files that were created within the time limit.
-        
+
         Args:
             time_limit_seconds: Time limit in seconds from the first file's creation time
-            
+
         Returns:
             Number of corpus files created within the time limit
         """
         import os
         import time
-        
+
         if not os.path.exists(self.corpus_dir):
             print(f"Warning: Corpus directory does not exist for campaign {self.id}")
             return 0
-            
+
         try:
             # Get all files in the corpus directory
-            corpus_files = [os.path.join(self.corpus_dir, f) for f in os.listdir(self.corpus_dir) 
+            corpus_files = [os.path.join(self.corpus_dir, f) for f in os.listdir(self.corpus_dir)
                            if os.path.isfile(os.path.join(self.corpus_dir, f))]
-            
+
             if not corpus_files:
                 print(f"Warning: No corpus files found for campaign {self.id}")
                 return 0
-                
+
             # Sort files by modification time
             corpus_files.sort(key=lambda f: os.path.getmtime(f))
-            
+
             # Get the modification time of the first file
             start_time = os.path.getmtime(corpus_files[0])
-            
+
             # Calculate the end time as start_time + time_limit
             end_time = start_time + time_limit_seconds
-            
+
             # Count files with modification time <= end_time
             count = sum(1 for f in corpus_files if os.path.getmtime(f) <= end_time)
-            
+
             self.corpus_time_size = count
             return count
-            
+
         except Exception as e:
             print(f"Error calculating corpus size at time limit for campaign {self.id}: {str(e)}")
             return 0
@@ -322,7 +322,7 @@ class Campaign:
             df = df[['type', 'trace', 'detection_time', 'inducing_inputs']]
         self.add_trial_info(df)
         return df
-        
+
     def get_total_runtime(self):
         """
         Calculate the total runtime of the campaign.
@@ -341,18 +341,18 @@ class Campaign:
 
             # Skip header if it exists
             start_idx = 1 if len(lines) > 1 and not lines[0][0].isdigit() else 0
-            
+
             if start_idx >= len(lines):
                 print(f"Warning: No data rows in plot data file for campaign {self.id}")
                 return 0
-                
+
             # Get first and last timestamp
             first_line = lines[start_idx].strip().split(",")
             last_line = lines[-1].strip().split(",")
-            
+
             first_timestamp = float(first_line[0])
             last_timestamp = float(last_line[0])
-            
+
             if "zeugma" in self.id:
                 # For Zeugma, time is directly in milliseconds, convert to seconds
                 # The last timestamp is the total elapsed time
@@ -360,9 +360,9 @@ class Campaign:
             else:
                 # For other fuzzers, subtract first timestamp from last (unix timestamps)
                 runtime_seconds = last_timestamp - first_timestamp
-                
+
             return runtime_seconds
-            
+
         except Exception as e:
             print(f"Error calculating total runtime for campaign {self.id}: {str(e)}")
             return 0
@@ -405,7 +405,7 @@ def find_min_executions_per_benchmark(campaigns):
     """Find the minimum number of executions per benchmark."""
     print(f'Finding minimum executions per benchmark.')
     min_executions = defaultdict(lambda: float('inf'))
-    
+
     for campaign in campaigns:
         if campaign.executions > 0:  # Only consider campaigns with valid execution counts
             min_executions[campaign.subject] = min(min_executions[campaign.subject], campaign.executions)
@@ -418,7 +418,7 @@ def find_min_executions_per_benchmark(campaigns):
         else:
             print(f"\tWarning: No valid execution counts found for benchmark {benchmark}")
             result[benchmark] = 0
-            
+
     print(f'\tMinimum executions per benchmark: {result}')
     return result
 
@@ -437,7 +437,7 @@ def get_corpus_sizes_at_execution_limits(campaigns, min_executions_per_benchmark
         if execution_limit > 0:
             # Get corpus size at the execution limit
             campaign.get_corpus_size_at_execution_limit(execution_limit)
-            
+
             # Get the time it took to reach this execution limit
             campaign.get_time_for_executions(execution_limit)
         else:
@@ -460,7 +460,7 @@ def get_corpus_sizes_at_time_limits(campaigns, min_executions_per_benchmark):
         if execution_limit > 0:
             # First, get the time it took to reach the execution limit
             time_limit_seconds = campaign.get_time_for_executions(execution_limit)
-            
+
             if time_limit_seconds > 0:
                 # Then, count corpus files within that time limit
                 campaign.get_corpus_size_at_time_limit(time_limit_seconds)
@@ -498,7 +498,7 @@ def create_corpus_size_csv(campaigns, output_dir):
 def copy_controlled_corpus_files(input_dir, output_dir):
     """
     Copy a controlled set of corpus files based on the time_based_corpus_size in the CSV.
-    For each campaign, sorts the files by modification time and copies those created 
+    For each campaign, sorts the files by modification time and copies those created
     within the time limit to a new directory.
     """
     corpus_sizes_file = os.path.join(output_dir, 'corpus_sizes.csv')
@@ -534,29 +534,28 @@ def copy_controlled_corpus_files(input_dir, output_dir):
 
             # Get all files in the source directory
             try:
-                all_files = [os.path.join(source_dir, f) for f in os.listdir(source_dir) 
+                all_files = [os.path.join(source_dir, f) for f in os.listdir(source_dir)
                             if os.path.isfile(os.path.join(source_dir, f))]
-                
+
                 if not all_files:
                     print(f"\tWarning: No corpus files found for campaign {campaign_id}")
                     continue
-                
+
                 # Sort files by modification time
                 all_files.sort(key=lambda f: os.path.getmtime(f))
-                
+
                 # Get the modification time of the first file
                 start_time = os.path.getmtime(all_files[0])
-                
+
                 # Calculate the end time as start_time + time_limit
                 end_time = start_time + time_limit
-                
+
                 # Filter files to those modified before end_time
                 files_to_copy = [f for f in all_files if os.path.getmtime(f) <= end_time]
-                
+
                 print(f"\tCopying {len(files_to_copy)} files (out of {len(all_files)}) for campaign {campaign_id}")
 
                 # Copy the files
-                import shutil
                 for source_file in files_to_copy:
                     file_name = os.path.basename(source_file)
                     dest_file = os.path.join(dest_dir, file_name)
@@ -667,16 +666,21 @@ def extract_detections_data(campaigns, output_dir):
 def extract_corpus_size_data(campaigns, output_dir):
     # First, get execution counts for all campaigns
     campaigns = get_executions_for_all_campaigns(campaigns)
+    # Filter out campaigns with 20 in the ID
+    print("Filtering campaigns...")
+    print(len(campaigns))
+    campaigns = [c for c in campaigns if '20' not in c.id]
+    print(len(campaigns))
 
     # Find minimum executions per benchmark
     min_executions = find_min_executions_per_benchmark(campaigns)
-    
+
     # Write campaign trials summary CSV - NEW
     create_campaign_trials_summary(campaigns, output_dir)
 
     # First approach: Get corpus sizes at execution limits
     campaigns = get_corpus_sizes_at_execution_limits(campaigns, min_executions)
-    
+
     # Second approach: Get corpus sizes at time limits based on file modification times
     campaigns = get_corpus_sizes_at_time_limits(campaigns, min_executions)
 
@@ -687,27 +691,37 @@ def extract_corpus_size_data(campaigns, output_dir):
 def create_campaign_trials_summary(campaigns, output_dir):
     """Create a CSV with all campaigns and their trials per benchmark, plus summary statistics per technique."""
     print('Creating campaign trials summary CSV.')
-    
+
     # Calculate total runtime for each campaign
     for campaign in campaigns:
         campaign.total_runtime = campaign.get_total_runtime()
-    
+
     # Extract technique name from campaign ID
     for campaign in campaigns:
         # Extract fuzzer technique from campaign ID
         id_parts = campaign.id.lower().split('-')
         # Skip the subject and get the technique part
         technique = None
-        for part in id_parts[1:]:
-            if any(tech in part for tech in ['zeugma', 'bediv', 'zest', 'ei', 'random']):
-                technique = part
-                break
+
+        # Special handling for zest-mini
+        if 'zest-mini' in campaign.id.lower():
+            technique = 'zest-mini'
+        else:
+            # For other techniques
+            for part in id_parts[1:]:
+                if any(tech in part for tech in ['zeugma', 'bediv', 'zest', 'ei', 'random']):
+                    technique = part
+                    break
 
         campaign.technique = technique
-    
+
     # Create a dataframe with detailed campaign information
     data = []
     for c in campaigns:
+        # Skip campaigns with bedivfuzz-simple technique
+        if c.technique == 'bedivfuzz-simple' or 'bedivfuzz-simple' in c.id.lower():
+            continue
+
         data.append({
             'campaign_id': c.id,
             'benchmark': c.subject,
@@ -718,76 +732,79 @@ def create_campaign_trials_summary(campaigns, output_dir):
             'time_based_corpus_size': c.corpus_time_size,
             'total_runtime': c.total_runtime  # Add total runtime
         })
-    
+
     detail_df = pd.DataFrame(data)
-    
+
     # Identify campaigns with total runtime significantly less than 86400 seconds (24 hours)
     threshold = 86400 * 0.99  # 99% of 24 hours, allowing for some margin
     short_runtime_campaigns = detail_df[detail_df['total_runtime'] < threshold]
-    
+
     # Write the short runtime campaigns to a file, grouped by benchmark and technique
     short_runtime_file = os.path.join(output_dir, 'short_runtime_campaigns.txt')
     with open(short_runtime_file, 'w') as f:
         # Write header with total count
         total_short_campaigns = len(short_runtime_campaigns)
         f.write(f"Total campaigns with runtime < 99% of 24 hours: {total_short_campaigns}\n\n")
-        
+
         # Group by benchmark and technique
         grouped = short_runtime_campaigns.groupby(['benchmark', 'technique'])
-        
+
         for (benchmark, technique), group in grouped:
             f.write(f"Benchmark: {benchmark}, Technique: {technique}\n")
             f.write(f"Count: {len(group)}\n")
             f.write("-" * 80 + "\n")
-            
+
             # Sort by runtime
             sorted_group = group.sort_values(by='total_runtime')
-            
+
             for _, row in sorted_group.iterrows():
                 f.write(f"  {row['campaign_id']}: {row['total_runtime']:.2f} seconds ({row['total_runtime']/3600:.2f} hours)\n")
-            
+
             f.write("\n")
-    
+
     print(f"\tIdentified {total_short_campaigns} campaigns with shorter than expected runtime. Details written to {short_runtime_file}")
-    
+
     # Write the detailed campaign info to CSV
     detail_file = os.path.join(output_dir, 'campaign_trials_detail.csv')
     detail_df.to_csv(detail_file, index=False)
     print(f'\tWrote detailed campaign trials to {detail_file}.')
-    
+
     # Calculate summary statistics per technique per benchmark
     summary_data = []
+    threshold = 86400 * 0.99  # 99% of 24 hours, allowing for some margin
+
     for benchmark in detail_df['benchmark'].unique():
         benchmark_df = detail_df[detail_df['benchmark'] == benchmark]
-        
+
         for technique in benchmark_df['technique'].unique():
             technique_df = benchmark_df[benchmark_df['technique'] == technique]
-            
-            # Calculate statistics
+
+            # Filter out campaigns with short runtimes
+            valid_technique_df = technique_df[technique_df['total_runtime'] >= threshold]
+
+            # Skip if no valid campaigns remain after filtering
+            if len(valid_technique_df) == 0:
+                print(f"\tWarning: No valid campaigns for {benchmark}/{technique} after filtering short runtimes")
+                continue
+
+            # Calculate statistics using only valid campaigns
             summary_data.append({
                 'benchmark': benchmark,
                 'technique': technique,
-                'num_trials': len(technique_df),
-                'avg_executions': technique_df['executions'].mean(),
-                'median_executions': technique_df['executions'].median(),
-                'min_executions': technique_df['executions'].min(),
-                'max_executions': technique_df['executions'].max(),
-                'avg_corpus_size': technique_df['corpus_size'].mean(),
-                'median_corpus_size': technique_df['corpus_size'].median(),
-                'avg_time_based_corpus_size': technique_df['time_based_corpus_size'].mean(),
-                'median_time_based_corpus_size': technique_df['time_based_corpus_size'].median(),
-                'avg_time_to_exec_limit': technique_df['time_to_exec_limit'].mean(),
-                'median_time_to_exec_limit': technique_df['time_to_exec_limit'].median(),
-                'avg_total_runtime': technique_df['total_runtime'].mean(),  # Add avg total runtime
-                'median_total_runtime': technique_df['total_runtime'].median(),  # Add median total runtime
+                'num_trials': len(valid_technique_df),  # This now reflects only valid trials
+                'total_trials': len(technique_df),  # Keep track of total trials before filtering
+                'avg_executions': valid_technique_df['executions'].mean(),
+                'std_executions': valid_technique_df['executions'].std(),
+                'avg_exec_speed': valid_technique_df['executions'].mean() / 86400,  # Average executions per second
+                'std_exec_speed': valid_technique_df['executions'].std() / 86400,  # Std dev of executions per second
             })
-    
+
     # Create summary dataframe and write to CSV
     summary_df = pd.DataFrame(summary_data)
     summary_file = os.path.join(output_dir, 'technique_benchmark_summary.csv')
     summary_df.to_csv(summary_file, index=False)
     print(f'\tWrote technique/benchmark summary to {summary_file}.')
-    
+
     return detail_df, summary_df
 
 
@@ -797,13 +814,13 @@ def extract_data(input_dir, output_dir):
     campaigns = read_campaigns(input_dir)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Extract corpus size data (new functionality)
+    # # Extract corpus size data (new functionality)
     print("Extracting corpus data")
-    corpus_data = extract_corpus_size_data(campaigns, output_dir)
+    # corpus_data = extract_corpus_size_data(campaigns, output_dir)
     print("Extracted corpus data")
 
     # Copy controlled corpus files based on time-based corpus sizes
-    # copy_controlled_corpus_files(input_dir, output_dir)
+    copy_controlled_corpus_files(input_dir, output_dir)
 
     # Extract existing data
     # coverage_data = extract_coverage_data(campaigns, times, output_dir)

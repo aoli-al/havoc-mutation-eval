@@ -23,7 +23,7 @@ ALGOS = [
 
 def run_command_with_file_ops(command_info):
     config, algo, iter_num = command_info
-    output_dir = f"/data/aoli/havoc_eval/cov-test/{config}-{algo}-results-{iter_num}"
+    output_dir = f"/data/aoli/havoc_eval/cov-test-count-based-2/{config}-{algo}-results-{iter_num}"
 
     # Define paths
     corpus_path = os.path.join(output_dir, "campaign/corpus")
@@ -70,9 +70,9 @@ if __name__ == "__main__":
     # test_algo = "zest"  # Choose one algorithm for testing
     # test_iter = 1  # Choose one iteration for testing
 
-    # Run a single test command
+    # # Run a single test command
     # run_command_with_file_ops((test_config, test_algo, test_iter))
 
-    # Comment out the Pool for now - uncomment for full run
+    # # Comment out the Pool for now - uncomment for full run
     with Pool(1) as p:
         p.map(run_command_with_file_ops, get_command_info())
