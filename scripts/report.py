@@ -126,7 +126,9 @@ def create_plots_subsection(data):
 
 
 def create_coverage_content(data, times):
-    return tables.create_coverage_table(data, times).to_html() + \
+    cov_table = tables.create_coverage_table(data, times)
+    print(cov_table.to_latex())
+    return cov_table.to_html() + \
         create_pairwise_subsection(tables.create_coverage_pairwise(data, times)) + \
         create_plots_subsection(data)
 
@@ -161,7 +163,7 @@ def write_report(report_file, content):
 
 
 def create_report(input_dir, report_file):
-    times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
+    times = [pd.to_timedelta(24, 'h')]
     coverage = find_dataset(input_dir, 'coverage')
     detections = find_dataset(input_dir, 'detections')
     # detections = None

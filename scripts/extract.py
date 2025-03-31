@@ -66,6 +66,11 @@ class Campaign:
                 .replace('One_Point', '1PT') \
                 .replace('Two_Point', '2PT') \
                 .replace('None', 'X')
+        elif fuzzer == "Zest":
+            if "-Djqf.ei.TOTALLY_RANDOM=true" in summary['configuration']["javaOptions"]:
+                fuzzer = "Random"
+            if "-Djqf.ei.MEAN_MUTATION_COUNT=1" in summary['configuration']["javaOptions"]:
+                fuzzer = "Zest-Mini"
         return fuzzer
 
     def add_trial_info(self, df):

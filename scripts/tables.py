@@ -4,7 +4,7 @@ import report_util
 
 BASELINE_FUZZER = 'Zest'
 FUZZER_ORDER = ['BeDiv-Simple', 'BeDiv-Struct', 'EI', 'Zest',
-                'Zeugma-Link']
+                'Zeugma-Link', "Zest-Mini", "Random"]
 
 
 def highlight_max(data, props):
@@ -17,7 +17,7 @@ def highlight_max(data, props):
 
 def style_table(table, precision=3, axis=1):
     return table.style.format(precision=precision, na_rep='---') \
-        .apply(lambda x: highlight_max(x, 'background-color: yellow;'), axis=axis)
+        .apply(lambda x: highlight_max(x, 'backgroundcolor: yellow;'), axis=axis)
 
 
 def pivot(data, col, row, value, col2='time'):
