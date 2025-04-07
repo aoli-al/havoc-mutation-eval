@@ -4,12 +4,12 @@ import shutil
 
 CONFIGURATIONS = [
     "ant",
-    "closure",
-    "maven",
-    "rhino",
-    "chocopy",
-    "gson",
-    "jackson"
+    #  "closure",
+    #  "maven",
+    #  "rhino",
+    #  "chocopy",
+    #  "gson",
+    #  "jackson"
 ]
 
 ALGOS = [
@@ -29,6 +29,14 @@ def run_command_with_file_ops(command_info):
     corpus_path = os.path.join(output_dir, "campaign/corpus")
     corpus_trial_controlled_path = os.path.join(output_dir, "campaign/corpus_trial_controlled")
     corpus_full_path = os.path.join(output_dir, "campaign/corpus_full")
+
+    if os.path.exists(corpus_full_path):
+        print(f"Moving {corpus_path} to {corpus_full_path}")
+        shutil.rmtree(corpus_full_path)
+
+    if os.path.exists(corpus_path):
+        print(f"Moving {corpus_path} to {corpus_full_path}")
+        shutil.move(corpus_path, corpus_full_path)
 
     # Step 1: Move corpus to corpus_full (if exists)
     if os.path.exists(corpus_path):
