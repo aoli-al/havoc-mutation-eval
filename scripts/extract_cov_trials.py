@@ -50,8 +50,8 @@ class Campaign:
         if not os.path.exists(self.plot_data_file):
             self.plot_data_file = os.path.join(campaign_dir, ZEUGMA_PLOT_DATA_FILE_NAME)
 
-        self.valid = os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir)
-                    # all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
+        self.valid = os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir) \
+                    and all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
         if not self.valid:
             print(f"INVALID: {self.id}")
             print(f"Plot data file: {self.plot_data_file}, {os.path.exists(self.plot_data_file)}")
@@ -60,9 +60,10 @@ class Campaign:
 
         if self.valid:
             # with open(self.summary_file, 'r') as f:
+            #     print(self.summary_file)
             #     summary = json.load(f)
             self.subject = self.id.split("-")[0].strip()
-            # self.fuzzer = Campaign.get_fuzzer(summary)
+            self.fuzzer = Campaign.convert_id_to_fuzzer(self.id)
             # self.duration = summary['configuration']['duration']
 
             # Initialize executions and corpus_size attributes
@@ -94,7 +95,27 @@ class Campaign:
     def add_trial_info(self, df):
         df['subject'] = self.subject
         df['campaign_id'] = self.id
-        df['fuzzer'] = self.fuzzer
+        df['fuzzer'] = df['campaign_id'].apply(lambda x: Campaign.convert_id_to_fuzzer(x)) 
+
+    @staticmethod
+    def convert_id_to_fuzzer(campaign_id):
+        campaign_id = campaign_id.lower()
+        if "zeugma" in campaign_id and "link" in campaign_id:
+            return "Zeugma"
+        elif "zeugma" in campaign_id and "none" in campaign_id:
+            return "Zeugma-None"
+        elif "structure" in campaign_id:
+            return "BeDivFuzz"
+        elif "simple" in campaign_id:
+            return "BeDivFuzz-Simple"
+        elif "zest-mini" in campaign_id:
+            return "Zest-Mini"
+        elif "random" in campaign_id:
+            return "Random"
+        elif "ei" in campaign_id:
+            return "EI"
+        else:
+            return "Zest"
 
     def get_coverage_data(self):
         df = pd.read_csv(self.coverage_file) \
@@ -669,11 +690,11 @@ def extract_corpus_size_data(campaigns, output_dir):
     # Filter out campaigns with 20 in the ID
     print("Filtering campaigns...")
     print(len(campaigns))
-    campaigns = [c for c in campaigns if '20' not in c.id]
+    campaigns = [c for c in campaigns if int(c.id.split('-')[-1]) < 20]
     print(len(campaigns))
 
     # Find minimum executions per benchmark
-    min_executions = find_min_executions_per_benchmark(campaigns)
+    # min_executions = find_min_executions_per_benchmark(campaigns)
 
     # Write campaign trials summary CSV - NEW
     create_campaign_trials_summary(campaigns, output_dir)
@@ -706,6 +727,8 @@ def create_campaign_trials_summary(campaigns, output_dir):
         # Special handling for zest-mini
         if 'zest-mini' in campaign.id.lower():
             technique = 'zest-mini'
+        elif 'zeugma-none' in campaign.id.lower():
+            technique = 'zeugma-none'
         else:
             # For other techniques
             for part in id_parts[1:]:
@@ -815,18 +838,18 @@ def extract_data(input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     # # Extract corpus size data (new functionality)
-    print("Extracting corpus data")
+    # print("Extracting corpus data")
     # corpus_data = extract_corpus_size_data(campaigns, output_dir)
-    print("Extracted corpus data")
+    # print("Extracted corpus data")
 
     # Copy controlled corpus files based on time-based corpus sizes
-    copy_controlled_corpus_files(input_dir, output_dir)
+    # copy_controlled_corpus_files(input_dir, output_dir)
 
     # Extract existing data
-    # coverage_data = extract_coverage_data(campaigns, times, output_dir)
+    coverage_data = extract_coverage_data(campaigns, times, output_dir)
     # detections_data = extract_detections_data(campaigns, output_dir)
 
-    return corpus_data
+    # return corpus_data
 
 
 def main():

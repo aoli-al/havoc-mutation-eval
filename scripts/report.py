@@ -10,6 +10,19 @@ import extract
 import report_util
 import tables
 
+fuzzer_map = {
+    'BeDiv-Struct': 'BeDivFuzz',
+    'Zeugma-Link': 'Zeugma',
+    'Zeugma': 'Zeugma',
+    'EI': 'EI',
+    'Zest-Mini': 'Zest-Mini',
+    'Zest': 'Zest',
+    'Random': 'Random',
+    'BeDiv-Simple': 'Simple',
+    'BeDivFuzz-Simple': 'Simple',
+    'BeDivFuzz': 'BeDivFuzz'
+}
+
 TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -86,98 +99,118 @@ def create_pairwise_subsection(frames, name=''):
     return f'<div><h3>{name}Pairwise P-Values and Effect Sizes</h3><div class="wrapper">{content}</div></div>'
 
 
-def plot_coverage(data, subject, cmap):
+def plot_coverage(data, subject, cmap=None, output_dir=None):
+    # Define the specific order and colors
     fuzzers = sorted(data['fuzzer'].unique())
-    if cmap is None:
-        cmap = {k[0]: k[1] for k in zip(fuzzers, [k for k in mcolors.TABLEAU_COLORS])}
+    plot_fuzzers = [f for f in fuzzers if 'Simple' not in f] 
+    plot_fuzzers = [fuzzer_map[f] for f in plot_fuzzers]
+    legend_order = ["Random", "Zest-Mini", "Zest", "EI", "BeDivFuzz", "Zeugma"]
+    colors = ['#4878CF', '#EE854A', '#D65F5F', '#59A14F', '#B279A2', '#BAB0AC']
+    
+    # Define different line styles for grayscale distinction
+    line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
+    
+    # Create custom color map
+    custom_cmap = {k: v for k, v in zip(legend_order, colors)}
+    
+    cmap = custom_cmap
+    
     data = report_util.select(data, subject=subject)
     plt.rcParams["font.family"] = 'sans-serif'
     fig, ax = plt.subplots(figsize=(8, 4))
+    
     stats = data.groupby(by=['time', 'fuzzer'])['covered_branches'] \
         .agg([min, max, 'median']) \
         .reset_index() \
         .sort_values('time')
-    for fuzzer in fuzzers:
+    
+    # Only include fuzzers that are in our legend order
+    
+    # Plot each fuzzer with its specific color and line style
+    for i, fuzzer in enumerate(plot_fuzzers):
         color = cmap[fuzzer]
+        linestyle = line_styles[i % len(line_styles)]
+        
         selected = stats[stats['fuzzer'] == fuzzer]
         times = (selected['time'] / pd.to_timedelta(1, 'm')).tolist()
-        ax.plot(times, selected['median'], color=color, label=fuzzer)
+        
+        ax.plot(times, selected['median'], color=color, linestyle=linestyle, 
+                label=fuzzer, linewidth=2)
         ax.fill_between(times, selected['min'], selected['max'], color=color, alpha=0.2)
-    ax.set_xlabel('Time (Minutes)')
-    ax.set_ylabel('Covered Branches')
+    
+    # Add legend with custom order
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ordered_labels = [label for label in legend_order if label in labels]
+    # Save just the legend as a separate file
+    # Create a new figure for the legend
+    figlegend = plt.figure(figsize=(6, 6))
+    
+    # Create a list of artists and labels for the legend
+    legend_handles = []
+    for i, label in enumerate(legend_order):
+        if label in plot_fuzzers:
+            color = cmap[label]
+            linestyle = line_styles[i % len(line_styles)]
+            line = plt.Line2D([0], [0], color=color, linestyle=linestyle, linewidth=2)
+            legend_handles.append((line, label))
+    
+    # Create the standalone legend
+    figlegend.legend([h for h, l in legend_handles], 
+                        [l for h, l in legend_handles],
+                        loc='center', ncol=3, fontsize=14)
+    
+    # Remove the frame
+    figlegend.set_frameon(False)
+    
+    # Save the legend
+    figlegend.savefig(os.path.join(output_dir, 'legend.pdf'), bbox_inches='tight')
+    plt.close(figlegend)
+    
+    ax.set_xlabel('Time (Minutes)', fontsize=18)
+    ax.set_ylabel('Covered Branches', fontsize=18)
     ax.xaxis.get_major_locator().set_params(integer=True)
     ax.yaxis.get_major_locator().set_params(integer=True)
+    ax.xaxis.set_tick_params(labelsize=14)
+    ax.yaxis.set_tick_params(labelsize=14)
+
     ax.set_ylim(bottom=0)
     ax.set_xlim(left=0)
-    ax.set_title(subject.title())
+    ax.set_title(subject.title(), fontsize=20, fontweight='bold')
+    
     return fig
 
-
-def create_plots_subsection(data):
+def create_plots_subsection(data, output_dir):
     subjects = sorted(data['subject'].unique())
     fuzzers = sorted(data['fuzzer'].unique())
+    fuzzers = [fuzzer_map[f] for f in fuzzers]
     cmap = {k[0]: k[1] for k in zip(fuzzers, [k for k in mcolors.TABLEAU_COLORS])}
     content = ''
+    cov_output_dir = os.path.join(output_dir, 'cov')
+    if not os.path.exists(cov_output_dir):
+        os.makedirs(cov_output_dir)
     for subject in subjects:
-        plot_coverage(data, subject, cmap)
-        content += report_util.fig_to_html()
-    legend = report_util.plot_legend(cmap, len(fuzzers))
-    return f'<div><h3>Coverage Over Time</h3>{legend}<div class="wrapper">{content}</div></div>'
+        plot_coverage(data, subject, cmap, cov_output_dir)
+        # Save the figure to a file in scripts/figs/cov/
+        fig_file = os.path.join(cov_output_dir, f"{subject}.pdf")
+        plt.savefig(fig_file, bbox_inches='tight')
 
 
-def create_coverage_content(data, times):
-    return tables.create_coverage_table(data, times).to_html() + \
-        create_pairwise_subsection(tables.create_coverage_pairwise(data, times)) + \
-        create_plots_subsection(data)
+def create_coverage_content(data, times, output_dir):
+    create_plots_subsection(data, output_dir)
+    cov_table = tables.create_coverage_table(data, times, output_dir)
 
-
-def create_defects_content(data, times):
-    if data.empty:
-        return "<p>No matched defects detected.</p>"
-    return tables.create_defect_table(data, times).to_html() + \
-        create_pairwise_subsection(tables.create_defects_pairwise(data, times))
-
-
-def create_heritability_content(data):
-    return tables.create_heritability_table(data).to_html() + \
-        create_pairwise_subsection(tables.create_hy_pairwise(data), 'HY ') + \
-        create_pairwise_subsection(tables.create_ir_pairwise(data), 'IR ')
-
-
-def create_section(name, content_f, **kwargs):
-    print(f'Creating {name} section.')
-    content = content_f(**kwargs)
-    print(f'\tCreated {name} section.')
-    return f'<div><h2>{name.title()}</h2>{content}</div>'
-
-
-def write_report(report_file, content):
-    print(f'Writing report to {report_file}.')
-    os.makedirs(pathlib.Path(report_file).parent, exist_ok=True)
-    report = TEMPLATE.replace('$content', content)
-    with open(report_file, 'w') as f:
-        f.write(report)
-    print(f'\tSuccessfully wrote report.')
-
-
-def create_report(input_dir, report_file):
+def create_report(input_dir, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     times = [pd.to_timedelta(5, 'm'), pd.to_timedelta(24, 'h')]
     coverage = find_dataset(input_dir, 'coverage')
-    detections = find_dataset(input_dir, 'detections')
     # detections = None
-    if coverage is None or detections is None:
-        coverage, detections = extract.extract_data(input_dir, input_dir)
-    content = create_section('coverage', create_coverage_content, data=coverage, times=times)
-    content += create_section('defects', create_defects_content, data=detections, times=times)
-    heritability = find_dataset(input_dir, 'heritability')
-    if heritability is not None:
-        content += create_section('heritability', create_heritability_content, data=heritability)
-    write_report(report_file, content)
-
+    assert coverage is not None, 'Coverage data not found.'
+    create_coverage_content(coverage, times, output_dir)
 
 def main():
     create_report(sys.argv[1], sys.argv[2])
-
 
 if __name__ == "__main__":
     main()

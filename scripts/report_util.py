@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -164,13 +165,34 @@ def read_timedelta_csv(file, column='time'):
         df[column] = pd.to_timedelta(df[column])
     return df
 
-
-def plot_legend(cmap, columns):
-    handles = [plt.plot([], [], marker="s", color=v, ls="none", label=k)[0] for k, v in cmap.items()]
-    fig, ax = plt.subplots(figsize=(columns, 1))
+def plot_legend(cmap, columns, cov_output_dir):
+    del cmap['Simple']
+    # Create handles for each legend item
+    handles = [plt.plot([], [], marker="s", markersize=15, color=v, ls="none", label=k)[0] for k, v in cmap.items()]
+    
+    # Create figure with appropriate size
+    # Using number of items instead of columns for the height, since each item will be on its own line
+    num_items = len(cmap)
+    fig, ax = plt.subplots(figsize=(columns, num_items * 0.5))
     ax.axis('off')
-    legend = ax.legend(handles=handles, frameon=False, loc='lower center', ncol=columns)
+    
+    # Create legend with one item per row (ncol=1)
+    # Increase font size with prop parameter
+    legend = ax.legend(
+        handles=handles, 
+        frameon=False, 
+        loc='center left', 
+        ncol=1,  # One item per column (vertical list)
+        prop={'size': 14},  # Increase font size
+        labelspacing=1.2  # Add more space between legend items
+    )
+    
+    # # Increase marker size in the legend
+    # for handle in legend.legend_handles:
+    #     handle._legmarker.set_markersize(15)
+    
+    # Save the figure
     fig = legend.figure
     fig.canvas.draw()
     bbox = legend.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    return fig_to_html(bbox)
+    plt.savefig(os.path.join(cov_output_dir, "legend.pdf"), bbox_inches=bbox, dpi=600, transparent=True)
