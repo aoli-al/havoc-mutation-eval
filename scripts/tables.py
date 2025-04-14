@@ -1,10 +1,10 @@
+import os
 import pandas as pd
 
 import report_util
 
 BASELINE_FUZZER = 'Zest'
-FUZZER_ORDER = ['BeDiv-Simple', 'BeDiv-Struct', 'EI', 'Zest',
-                'Zeugma-Link', "Zest-Mini", "Random"]
+FUZZER_ORDER = ['Random', 'Zest-Mini', 'Zest', 'EI', 'BeDivFuzz', 'Zeugma']
 
 
 def highlight_max(data, props):
@@ -59,15 +59,11 @@ def create_stat_table(data, x, baseline_x, y, columns):
     return pd.concat(frames)
 
 
-def create_coverage_table(data, times):
+def create_coverage_table(data, times, output_dir):
     table = create_stat_table(data[data['time'].isin(times)],
                               x='fuzzer', baseline_x=BASELINE_FUZZER, y='covered_branches',
                               columns=['time', 'subject'])
-    stats = pivot(table, 'subject', 'fuzzer', 'stat').reindex(FUZZER_ORDER)
-    sigs = pivot(table, 'subject', 'fuzzer', 'sig')
-    return style_table(stats, precision=1, axis=0) \
-        .apply(lambda _: sigs, axis=None) \
-        .set_caption('Branch Coverage.')
+    table.to_csv(os.path.join(output_dir, "coverage_results.csv"))
 
 
 def times_to_detected(data, times):
