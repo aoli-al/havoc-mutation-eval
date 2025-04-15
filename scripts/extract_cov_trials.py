@@ -50,8 +50,9 @@ class Campaign:
         if not os.path.exists(self.plot_data_file):
             self.plot_data_file = os.path.join(campaign_dir, ZEUGMA_PLOT_DATA_FILE_NAME)
 
-        self.valid = os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir) \
-                    and all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])
+        self.valid = (os.path.exists(self.plot_data_file) and os.path.exists(self.corpus_dir) \
+                    and all(os.path.isfile(f) for f in [self.coverage_file, self.summary_file, self.failures_file])) or \
+                    "zeugma-none" in self.id
         if not self.valid:
             print(f"INVALID: {self.id}")
             print(f"Plot data file: {self.plot_data_file}, {os.path.exists(self.plot_data_file)}")
@@ -95,7 +96,7 @@ class Campaign:
     def add_trial_info(self, df):
         df['subject'] = self.subject
         df['campaign_id'] = self.id
-        df['fuzzer'] = df['campaign_id'].apply(lambda x: Campaign.convert_id_to_fuzzer(x)) 
+        df['fuzzer'] = df['campaign_id'].apply(lambda x: Campaign.convert_id_to_fuzzer(x))
 
     @staticmethod
     def convert_id_to_fuzzer(campaign_id):
@@ -421,6 +422,35 @@ def get_executions_for_all_campaigns(campaigns):
     print(f'\tFinished getting execution counts.')
     return campaigns
 
+def find_normalized_zeugma_result(campaigns):
+    zest_exeuctions = {}
+    zeugma_none_normalized_times = {}
+
+    for campaign in campaigns:
+        if "-zest-" in campaign.id:  # Only consider campaigns with valid execution counts
+            if campaign.subject not in zest_exeuctions:
+                zest_exeuctions[campaign.subject] = []
+            zest_exeuctions[campaign.subject].append(campaign.executions)
+    for campaign in campaigns:
+
+        if "zeugma-none" in campaign.id:
+            zest_mean_value = np.mean(zest_exeuctions[campaign.subject])
+            if campaign.subject not in zeugma_none_normalized_times:
+                zeugma_none_normalized_times[campaign.subject] = []
+            zeugma_none_normalized_times[campaign.subject].append(campaign.get_time_for_executions(zest_mean_value))
+
+    for campaign in campaigns:
+        if "zeugma-linked" in campaign.id:
+            campaign.normalized_exec_time = np.mean(zeugma_none_normalized_times[campaign.subject])
+
+    result = {}
+    for key, values in zeugma_none_normalized_times.items():
+        zeugma_mean = np.mean(values)
+        result[key] = zeugma_mean
+
+    print(f'\tMinimum executions per benchmark: {result}')
+    return result
+
 
 def find_min_executions_per_benchmark(campaigns):
     """Find the minimum number of executions per benchmark."""
@@ -507,7 +537,8 @@ def create_corpus_size_csv(campaigns, output_dir):
             'executions': c.executions,
             'execution_based_corpus_size': c.corpus_size,
             'time_to_execution_limit': c.execution_time,
-            'time_based_corpus_size': c.corpus_time_size
+            'time_based_corpus_size': c.corpus_time_size,
+            'normalized_execution_time': c.normalized_exec_time if hasattr(c, 'normalized_exec_time') else 0,
         })
 
     df = pd.DataFrame(data)
@@ -693,8 +724,10 @@ def extract_corpus_size_data(campaigns, output_dir):
     campaigns = [c for c in campaigns if int(c.id.split('-')[-1]) < 20]
     print(len(campaigns))
 
+    find_normalized_zeugma_result(campaigns)
+
     # Find minimum executions per benchmark
-    # min_executions = find_min_executions_per_benchmark(campaigns)
+    min_executions = find_min_executions_per_benchmark(campaigns)
 
     # Write campaign trials summary CSV - NEW
     create_campaign_trials_summary(campaigns, output_dir)
@@ -846,7 +879,7 @@ def extract_data(input_dir, output_dir):
     # copy_controlled_corpus_files(input_dir, output_dir)
 
     # Extract existing data
-    coverage_data = extract_coverage_data(campaigns, times, output_dir)
+    coverage_data = extract_coverage_data(filter(lambda c: "zeugma-none" not in c.id, campaigns), times, output_dir)
     # detections_data = extract_detections_data(campaigns, output_dir)
 
     # return corpus_data
