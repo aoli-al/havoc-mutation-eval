@@ -108,12 +108,14 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
     colors = ['#4878CF', '#EE854A', '#D65F5F', '#59A14F', '#B279A2', '#BAB0AC']
 
     # Define different line styles for grayscale distinction
-    line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
+    line_styles = ['-.', (0, (3, 1, 1, 1)), ":", '--', (0, (5, 1)), '-']
 
     # Create custom color map
     custom_cmap = {k: v for k, v in zip(legend_order, colors)}
 
     cmap = custom_cmap
+    lmap = {k: v for k, v in zip(legend_order, line_styles)}
+
 
     data = report_util.select(data, subject=subject)
     plt.rcParams["font.family"] = 'sans-serif'
@@ -129,7 +131,7 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
     # Plot each fuzzer with its specific color and line style
     for i, fuzzer in enumerate(plot_fuzzers):
         color = cmap[fuzzer]
-        linestyle = line_styles[i % len(line_styles)]
+        linestyle = lmap[fuzzer]
 
         selected = stats[stats['fuzzer'] == fuzzer]
         times = (selected['time'] / pd.to_timedelta(1, 'm')).tolist()
@@ -151,7 +153,7 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
     for i, label in enumerate(legend_order):
         if label in plot_fuzzers:
             color = cmap[label]
-            linestyle = line_styles[i % len(line_styles)]
+            linestyle = lmap[label]
             line = plt.Line2D([0], [0], color=color, linestyle=linestyle, linewidth=2)
             legend_handles.append((line, label))
 
