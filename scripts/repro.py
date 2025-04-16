@@ -4,22 +4,22 @@ import os
 
 CONFIGURATIONS = [
     "ant",
-    "closure",
-    "maven",
-    "rhino",
-    "chocopy",
-    "gson",
-    "jackson"
+    #  "closure",
+    #  "maven",
+    #  "rhino",
+    #  "chocopy",
+    #  "gson",
+    #  "jackson"
 
 ]
 ALGOS = [
-    #  "ei",
+    "ei",
     #  "zest",
     #  "zeugma-linked",
     #  "bedivfuzz-simple",
     #  "bedivfuzz-structure",
-    "random",
-    "zest-mini",
+    #  "random",
+    #  "zest-mini",
 ]
 
 
@@ -28,7 +28,7 @@ def get_commands():
 
     for config in CONFIGURATIONS:
         for algo in ALGOS:
-            for iter in range(0, 20):
+            for iter in range(0, 1):
                 output_dir = f"{path}/{config}-{algo}-results-{iter}"
                 if os.path.exists(output_dir):
                     command = f"mvn -pl :zeugma-evaluation-tools meringue:analyze -P{config},{algo} -Dmeringue.outputDirectory={output_dir}"

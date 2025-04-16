@@ -192,7 +192,7 @@ def create_plots_subsection(data, output_dir):
     for subject in subjects:
         plot_coverage(data, subject, cmap, cov_output_dir)
         # Save the figure to a file in scripts/figs/cov/
-        fig_file = os.path.join(cov_output_dir, f"{subject}.pdf")
+        fig_file = os.path.join(cov_output_dir, f"{subject.title()}.pdf")
         plt.savefig(fig_file, bbox_inches='tight')
 
 
@@ -207,6 +207,10 @@ def create_report(input_dir, output_dir):
     coverage = find_dataset(input_dir, 'coverage')
     # detections = None
     assert coverage is not None, 'Coverage data not found.'
+    coverage['fuzzer'] = coverage['fuzzer'].replace({
+        "BeDiv-Struct": "BeDivFuzz",
+        "Zeugma-Link": "Zeugma",
+    })
     create_coverage_content(coverage, times, output_dir)
 
 def main():
