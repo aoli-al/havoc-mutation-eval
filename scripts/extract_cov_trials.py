@@ -871,9 +871,9 @@ def extract_data(input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     # # Extract corpus size data (new functionality)
-    # print("Extracting corpus data")
-    # corpus_data = extract_corpus_size_data(campaigns, output_dir)
-    # print("Extracted corpus data")
+    print("Extracting corpus data")
+    corpus_data = extract_corpus_size_data(campaigns, output_dir)
+    print("Extracted corpus data")
 
     # Copy controlled corpus files based on time-based corpus sizes
     # copy_controlled_corpus_files(input_dir, output_dir)
