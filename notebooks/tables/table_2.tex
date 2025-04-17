@@ -1,0 +1,22 @@
+\begin{table}[t]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \caption{For each fuzzer, we report the median branch coverage in application classes for each subject across 20 fuzzing campaigns after 24 hours. Values in \textcolor{red}{red} indicate a statistically significant decrease compared to Zest, while \textcolor{\chigher}{olive} values show a significant increase. The highest value for each benchmark is highlighted in blue.}
+    \label{tab:cov}
+    \begin{tabular}{l|cc|cc|cc|cc|cc|cc|cc}
+    \toprule
+    \multirow{3}{*}{\textbf{Fuzzer}} & \multicolumn{2}{c|}{\textbf{Ant}} & \multicolumn{2}{c|}{\textbf{Chocopy}} & \multicolumn{2}{c|}{\textbf{Closure}} & \multicolumn{2}{c|}{\textbf{Gson}} & \multicolumn{2}{c|}{\textbf{Jackson}} & \multicolumn{2}{c|}{\textbf{Maven}} & \multicolumn{2}{c}{\textbf{Rhino}}\\
+    & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} & Fixed & \multirow{2}{*}{24hr} \\
+    & Trial & & Trial & & Trial & & Trial & & Trial & & Trial & & Trial & \\
+    \midrule
+    Random & \textcolor{red}{622.5} & \textcolor{red}{755.0} & \textcolor{red}{876.0} & \textcolor{red}{876.0} & \textcolor{red}{10908.5} & \textcolor{red}{11227.0} & \textcolor{red}{319.0} & \textcolor{red}{319.0} & \textcolor{red}{1112.0} & \textcolor{red}{1113.0} & \textcolor{red}{600.0} & \textcolor{red}{669.5} & \textcolor{red}{3162.5} & \textcolor{red}{3227.0} \\
+    Zest-Mini & 911.5 & 914.0 & \textcolor{red}{875.0} & \textcolor{red}{876.0} & 12407.5 & 12443.5 & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}321.0 & 1121.0 & 1121.0 & 1085.5 & \cellcolor{blue!15}1138.0 & 3514.5 & 3631.5 \\
+    Zest & \cellcolor{blue!15}919.5 & \cellcolor{blue!15}920.5 & 889.0 & 889.0 & 12405.0 & 12520.0 & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}321.0 & 1121.0 & 1121.0 & 1100.5 & \cellcolor{blue!15}1138.0 & 3474.5 & 3542.5 \\
+    EI & 918.0 & \cellcolor{blue!15}920.5 & \cellcolor{blue!15}\textcolor{\chigher}{898.5} & \cellcolor{blue!15}\textcolor{\chigher}{899.0} & \textcolor{\chigher}{12679.5} & \textcolor{\chigher}{12853.5} & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}321.0 & 1121.0 & 1121.0 & \textcolor{\chigher}{1117.5} & \cellcolor{blue!15}1138.0 & 3459.5 & 3494.0 \\
+    BeDivFuzz & \textcolor{red}{888.5} & \textcolor{red}{891.5} & \textcolor{red}{880.0} & 889.0 & \textcolor{red}{12209.5} & \textcolor{red}{12373.0} & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}321.0 & 1121.0 & 1121.0 & \textcolor{red}{683.5} & \textcolor{red}{697.0} & \textcolor{red}{3286.0} & \textcolor{red}{3310.0} \\
+    Zeugma & \textcolor{red}{904.0} & \textcolor{red}{908.5} & \textcolor{red}{877.0} & \textcolor{red}{877.0} & \cellcolor{blue!15}\textcolor{\chigher}{12707.5} & \cellcolor{blue!15}\textcolor{\chigher}{13406.5} & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}321.0 & \cellcolor{blue!15}\textcolor{\chigher}{1123.0} & \cellcolor{blue!15}\textcolor{\chigher}{1123.5} & \cellcolor{blue!15}\textcolor{\chigher}{1138.0} & \cellcolor{blue!15}1138.0 & \cellcolor{blue!15}\textcolor{\chigher}{3798.5} & \cellcolor{blue!15}\textcolor{\chigher}{3852.0} \\
+    Zeugma$^{N}$ & N/A & \textcolor{red}{903.5} & N/A & \textcolor{red}{877.0} & N/A & \textcolor{\chigher}{12737.5} & N/A & 321.0 & N/A & \textcolor{\chigher}{1123.5} & N/A & 1138.0 & N/A & \textcolor{\chigher}{3838.0} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
