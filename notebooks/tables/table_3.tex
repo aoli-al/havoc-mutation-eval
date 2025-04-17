@@ -1,0 +1,20 @@
+% Requires \usepackage{xcolor} in the preamble
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Runtime Slowdown by Benchmark and Technique (compared to baseline)}
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Benchmark} & \textbf{EI} & \textbf{BeDivFuzz} & \textbf{Zeugma} \\
+\midrule
+ant & $\footnotesize\cellcolor{red!17!white}0.83\times 1.18$$^{\pm 1}$ & $\footnotesize\cellcolor{red!6!white}0.93\times 1.19$$^{\pm 1}$ & $\footnotesize\cellcolor{red!44!white}0.56\times 1.16$$^{\pm 1}$ \\
+chocopy & $\footnotesize\cellcolor{green!0!white}1.01\times 1.18$$^{\pm 1}$ & $\footnotesize\cellcolor{green!55!white}2.11\times 1.55$$^{\pm 1}$ & $\footnotesize\cellcolor{red!33!white}0.67\times 1.11$$^{\pm 1}$ \\
+closure & $\footnotesize\cellcolor{red!15!white}0.85\times 1.10$$^{\pm 1}$ & $\footnotesize\cellcolor{red!23!white}0.76\times 1.10$$^{\pm 1}$ & $\footnotesize\cellcolor{red!34!white}0.66\times 1.13$$^{\pm 1}$ \\
+gson & $\footnotesize\cellcolor{red!45!white}0.54\times 1.16$$^{\pm 1}$ & $\footnotesize\cellcolor{red!45!white}0.55\times 1.32$$^{\pm 1}$ & $\footnotesize\cellcolor{red!15!white}0.85\times 1.08$$^{\pm 1}$ \\
+jackson & $\footnotesize\cellcolor{red!26!white}0.74\times 1.25$$^{\pm 1}$ & $\footnotesize\cellcolor{red!22!white}0.77\times 1.17$$^{\pm 1}$ & $\footnotesize\cellcolor{red!3!white}0.96\times 1.14$$^{\pm 1}$ \\
+maven & $\footnotesize\cellcolor{red!57!white}0.43\times 1.15$$^{\pm 1}$ & $\footnotesize\cellcolor{red!79!white}0.20\times 1.27$$^{\pm 1}$ & $\footnotesize\cellcolor{red!28!white}0.72\times 1.08$$^{\pm 1}$ \\
+rhino & $\footnotesize\cellcolor{red!36!white}0.64\times 1.12$$^{\pm 1}$ & $\footnotesize\cellcolor{red!16!white}0.83\times 1.17$$^{\pm 1}$ & $\footnotesize\cellcolor{red!9!white}0.90\times 1.04$$^{\pm 1}$ \\
+\bottomrule
+\end{tabular}
+\label{tab:runtime_slowdown}
+\end{table}
