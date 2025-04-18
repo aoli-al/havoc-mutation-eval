@@ -16,6 +16,7 @@ CONFIGURATIONS = [
     "jackson"
 ]
 ALGOS = [
+    "zeugma-none",
     "ei",
     "zest",
     "zeugma-linked",

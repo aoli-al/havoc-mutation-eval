@@ -3,7 +3,7 @@ from tabulate import tabulate
 import pandas as pd
 import argparse
 import report_util
-from extract_cov_trials import Campaign
+from scripts.extract import Campaign
 
 def get_closest_covered_branches_at(time_df, campaign_id, time_to_execution_limit):
     campaign_time_data = time_df[time_df['campaign_id'] == campaign_id]
