@@ -16,8 +16,14 @@ cd fuzzers
 
 ## Run one Evaluation
 
-```
-mvn :mer
+To run a single campaign, you may use the `mvn` command directly:
+
+```bash
+cd fuzzers
+mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
+ -P{FUZZER},{TARGET}{,log-mutation} \
+ -Dmeringue.outputDirectory={OUTPUT_DIR} \
+ -Dmeringue.duration={DURATION}
 ```
 
 ## Run all Evaluations
@@ -61,3 +67,5 @@ python3 ./scripts/extract_mutation_data.py ./data/raw/fresh-baked ./data/aggrega
 Next, you may check the aggregated result in the `data/aggregated/fresh-baked` folder.
 
 ## Visualized the Results
+
+You may open `notebooks/Final Results.ipynb` to visualize the results. Remember to change `DATA_DIR` to `../data/aggregated/fresh-baked` in the notebook.
