@@ -55,3 +55,4 @@ lastClass.txt
 *.ipynb_checkpoints
 **/__pycache__
 .java-version
+data/raw/fresh-baked

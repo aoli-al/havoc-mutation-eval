@@ -1,5 +1,8 @@
 original_dir=$(pwd)
 
+cd meringue
+mvn -DskipTests install
+
 cd BeDivFuzz
 mvn -DskipTests install
 
