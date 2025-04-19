@@ -4,6 +4,15 @@ This repository contains the code and data for the paper "The Havoc Paradox in G
 
 ## Requirements
 
+* **Python**: >= 3.10
+* **java**: == 11
+* **Maven**: >= 3.8.6
+
+**Minimum Hardware Requirements:**
+* **CPU**: >= 1 cores
+* **Memory**: >= 16 G
+* **Disk**: >= 50 G
+
 
 ## Build the Fuzzers
 
@@ -49,18 +58,30 @@ This script will run all the fuzzers in parallel, using the number of CPUs speci
 
 The results will be saved in the `data/raw/fresh-baked` folder. Each campaign will be saved in a separate folder, with name `{target}-{fuzzer}-results-{id}`.
 
+> [!NOTE]
+> Each instance takes ~4-6 GBs so you may need to adjust the number of instances running in parallel according to your machine's memory. The default value is 1.
 
 ## Post-process the Results
 
 Once you have finished all campaigns, you can run the following command to post-process the results:
 
-```python
+First, you need to create a virtual environment and install the required packages. You can do this by running the following command:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+Then, you can run the following command to extract the results from the raw data:
+
+```bash
 python3 ./scripts/extract.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
 ```
 
 If you have run the campaigns with the `--log-mutation` argument set to `true`, you can also run the following command to post-process the mutation distance logs:
 
-```python
+```bash
 python3 ./scripts/extract_mutation_data.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
 ```
 

@@ -56,3 +56,5 @@ lastClass.txt
 **/__pycache__
 .java-version
 data/raw/fresh-baked
+data/aggregated/fresh-baked
+.venv
