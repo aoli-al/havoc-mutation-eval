@@ -2,9 +2,8 @@ import sys
 import pandas as pd
 from process_data import process_mutation_data
 
-process_mutation_data(sys.argv[1], [False, True], [
+mutation_df = process_mutation_data(sys.argv[1], [False, True], [
                         "random", "zest-mini", "zest", "ei", "bedivfuzz-structure", "zeugma-linked"], 'mutations')
-mutation_df = pd.read_pickle("./mutations.pkl")
 new_label_names = {
     'zest': 'Zest',
     'zest-saved_only': 'Zest-saved',

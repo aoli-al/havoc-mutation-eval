@@ -90,3 +90,6 @@ Next, you may check the aggregated result in the `data/aggregated/fresh-baked` f
 ## Visualized the Results
 
 You may open `notebooks/Final Results.ipynb` to visualize the results. Remember to change `DATA_DIR` to `../data/aggregated/fresh-baked` in the notebook.
+
+> [!NOTE]
+> If you run the campaign too short, you may not get enough data to visualize. You can run the campaign longer, e.g., 5 minutes, and then run the post-process script again.

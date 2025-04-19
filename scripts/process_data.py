@@ -316,7 +316,7 @@ def process_mutation_data(path: str, saved_only: List[bool], algorithms: List[st
             df_dict['benchmark_name'] = pd.Series([name] * len(df))
     print('creating dataframe...')
     mutation_df = pd.DataFrame(df_dict)
-    mutation_df.to_pickle('./{}.pkl'.format(df_name))
+    return mutation_df
 
 def identify_algorithms(paths: List[str]) -> List[str]:
     algorithms = set()
