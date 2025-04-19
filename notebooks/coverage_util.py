@@ -38,7 +38,7 @@ def compute_sig_level(treatments, alpha=0.05):
 def mann_whitney(values1, values2):
     return scipy.stats.mannwhitneyu(values1, values2, alternative='two-sided', use_continuity=True)[1]
 
-def plot_coverage(data, subject, cmap=None, output_dir=None):
+def plot_coverage(data, subject, cmap=None):
     # Define the specific order and colors
     fuzzers = sorted(data['fuzzer'].unique())
     plot_fuzzers = [f for f in fuzzers if 'Simple' not in f]
@@ -85,7 +85,7 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
     ordered_labels = [label for label in legend_order if label in labels]
     # Save just the legend as a separate file
     # Create a new figure for the legend
-    figlegend = plt.figure(figsize=(6, 6))
+    # figlegend = plt.figure(figsize=(6, 6))
 
     # Create a list of artists and labels for the legend
     legend_handles = []
@@ -97,16 +97,13 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
             legend_handles.append((line, label))
 
     # Create the standalone legend
-    figlegend.legend([h for h, l in legend_handles],
+    fig.legend([h for h, l in legend_handles],
                         [l for h, l in legend_handles],
-                        loc='center', ncol=3, fontsize=14)
+                        loc='upper center', ncol=3, fontsize=14, bbox_to_anchor=(0.5, 1.2))
 
     # Remove the frame
-    figlegend.set_frameon(False)
-
+    fig.set_frameon(False)
     # Save the legend
-    figlegend.savefig(os.path.join(output_dir, 'legend.pdf'), bbox_inches='tight')
-    plt.close(figlegend)
 
     ax.set_xlabel('Time (Minutes)', fontsize=18)
     ax.set_ylabel('Covered Branches', fontsize=18)
@@ -118,8 +115,8 @@ def plot_coverage(data, subject, cmap=None, output_dir=None):
     ax.set_ylim(bottom=0)
     ax.set_xlim(left=0)
     ax.set_title(subject.title(), fontsize=20, fontweight='bold')
+    fig.show()
 
-    return fig
 
 def create_coverage_over_time_plots(data, output_dir):
     subjects = sorted(data['subject'].unique())
@@ -127,14 +124,8 @@ def create_coverage_over_time_plots(data, output_dir):
     fuzzers = [fuzzer_map[f] for f in fuzzers]
     cmap = {k[0]: k[1] for k in zip(fuzzers, [k for k in mcolors.TABLEAU_COLORS])}
     content = ''
-    cov_output_dir = os.path.join(output_dir, 'cov')
-    if not os.path.exists(cov_output_dir):
-        os.makedirs(cov_output_dir)
     for subject in subjects:
-        plot_coverage(data, subject, cmap, cov_output_dir)
-        # Save the figure to a file in scripts/figs/cov/
-        fig_file = os.path.join(cov_output_dir, f"{subject.title()}.pdf")
-        plt.savefig(fig_file, bbox_inches='tight')
+        plot_coverage(data, subject, cmap)
 
 
 def get_closest_covered_branches_at(time_df, campaign_id, time_to_execution_limit):
@@ -206,6 +197,8 @@ def get_aggregated_coverage(df):
                 sig_level = compute_sig_level(df['fuzzer'].unique())
                 if (mann_whitney(baseline, values) < sig_level):
                     new_data[coverage + "_sig"] = 'color: red;'
+                else:
+                    new_data[coverage + "_sig"] = ''
             aggregated.append(new_data)
     return pd.DataFrame(aggregated)
 

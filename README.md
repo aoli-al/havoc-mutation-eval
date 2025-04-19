@@ -75,11 +75,37 @@ pip3 install -r requirements.txt
 
 Then, you can run the following command to extract the results from the raw data:
 
+
+### Pre-baked 
+
+To analyze pre-baked result, you first need to download data from [Zenodo]() and unzip the data in the `data/raw` folder.
+
+```
+cd ./data/raw
+wget ...
+unzip pre-baked.zip
+cd ../..
+```
+
+- To extract the coverage data
+
+```bash
+```
+
+
+
+
+
+
+### Fresh-baked
+
+- First you may extract the coverage data.
+
 ```bash
 python3 ./scripts/extract.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
 ```
 
-If you have run the campaigns with the `--log-mutation` argument set to `true`, you can also run the following command to post-process the mutation distance logs:
+- If you have run the campaigns with the `--log-mutation` argument set to `true`, you can also run the following command to post-process the mutation distance logs:
 
 ```bash
 python3 ./scripts/extract_mutation_data.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
