@@ -90,12 +90,14 @@ cd ../..
 - To extract the coverage data
 
 ```bash
+python3 ./scripts/extract.py ./data/raw/pre-baked/24h-no-mutation-distance ./data/aggregated
 ```
 
+- To extract the mutation distance data
 
-
-
-
+```bash
+python3 ./scripts/extract_mutation_data.py ./data/raw/pre-baked/1h-with-mutation-distance ./data/aggregated
+```
 
 ### Fresh-baked
 
