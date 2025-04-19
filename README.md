@@ -21,6 +21,10 @@ We provide a Docker image that includes all the required dependencies and automa
    ```bash
    docker build -t havoc-mutation-eval .
    ```
+   Or if you want to use the pre-built image, you can pull it from Docker Hub:
+   ```bash
+   docker pull leeleo3x/havoc-mutation-eval
+   ```
 
 2. Run the Docker container:
    ```bash
