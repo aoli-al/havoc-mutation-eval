@@ -13,6 +13,32 @@ This repository contains the code and data for the paper "The Havoc Paradox in G
 * **Memory**: >= 16 G
 * **Disk**: >= 50 G
 
+## Docker Setup (Recommended)
+
+We provide a Docker image that includes all the required dependencies and automatically builds the fuzzers. To use it:
+
+1. Build the Docker image:
+   ```bash
+   docker build -t havoc-mutation-eval .
+   ```
+
+2. Run the Docker container:
+   ```bash
+   # Run all evaluations
+   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval run --time 5 --cpus 1 --rep 1 --log-mutation true
+   
+   # Run a single campaign
+   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval single FUZZER TARGET OUTPUT_DIR DURATION
+   
+   # Extract coverage data
+   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
+   
+   # Extract mutation distance data
+   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract-mutation /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
+   
+   # Start an interactive shell
+   docker run -it -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval bash
+   ```
 
 ## Build the Fuzzers
 
@@ -117,7 +143,7 @@ Next, you may check the aggregated result in the `data/aggregated/fresh-baked` f
 
 ## Visualized the Results
 
-You may open `notebooks/Final Results.ipynb` to visualize the results. Remember to change `DATA_DIR` to `../data/aggregated/fresh-baked` in the notebook.
+You may open `notebooks/Final Results.ipynb` to visualize the results. Remember to change `DATA_DIR` to `../data/aggregated/fresh-baked` in the notebook if you want to analyze fresh-baked data.
 
 > [!NOTE]
 > If you run the campaign too short, you may not get enough data to visualize. You can run the campaign longer, e.g., 5 minutes, and then run the post-process script again.
