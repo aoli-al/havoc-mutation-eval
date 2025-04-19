@@ -108,7 +108,7 @@ Then, you can run the following command to extract the results from the raw data
 
 ### Pre-baked 
 
-To analyze pre-baked result, you first need to download data from [Zenodo]() and unzip the data in the `data/raw` folder.
+To analyze pre-baked result, you first need to download data from [FigShare](https://figshare.com/s/789b43d5b7845655a36d) and unzip the data in the `data/raw` folder.
 
 ```
 cd ./data/raw
