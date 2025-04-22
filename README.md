@@ -24,6 +24,7 @@ We provide a Docker image that includes all the required dependencies and automa
    Or if you want to use the pre-built image, you can pull it from Docker Hub:
    ```bash
    docker pull leeleo3x/havoc-mutation-eval
+   docker tag leeleo3x/havoc-mutation-eval havoc-mutation-eval
    ```
 
 2. Run the Docker container:
@@ -43,6 +44,9 @@ We provide a Docker image that includes all the required dependencies and automa
    # Start an interactive shell
    docker run -it -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval bash
    ```
+
+> [!NOTE] 
+> Duration is defined the ISO-8601 duration format, e.g., `PT1H` for 1 hour, `PT5M` for 5 minutes, etc.
 
 ## Build the Fuzzers
 

@@ -41,7 +41,7 @@ case "$1" in
         fi
         cd fuzzers
         mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
-            -P$1,$2 \
+            -P$1,$2,log-mutation \
             -Dmeringue.outputDirectory=$3 \
             -Dmeringue.duration=$4
         ;;
