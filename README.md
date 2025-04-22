@@ -14,7 +14,9 @@ This repository contains the code and data for the paper "The Havoc Paradox in G
 - **Memory**: >= 16 G
 - **Disk**: >= 50 G
 
-## Docker Setup
+## Build
+
+### Docker 
 
 We provide a Docker image that includes all the required dependencies and automatically builds the fuzzers. To use it:
 
@@ -31,7 +33,7 @@ We provide a Docker image that includes all the required dependencies and automa
    docker tag leeleo3x/havoc-mutation-eval havoc-mutation-eval
    ```
 
-2. Run the Docker container:
+<!-- 2. Run the Docker container:
 
    ```bash
    # Run all evaluations
@@ -48,12 +50,9 @@ We provide a Docker image that includes all the required dependencies and automa
 
    # Start an interactive shell
    docker run -it -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval bash
-   ```
+   ``` -->
 
-> [!NOTE]
-> Duration is defined the ISO-8601 duration format, e.g., `PT1H` for 1 hour, `PT5M` for 5 minutes, etc.
-
-## Build the Fuzzers
+### Maven
 
 - To build the fuzzers, run the following command:
 
@@ -62,28 +61,56 @@ cd fuzzers
 ./setup.sh
 ```
 
-## Run one Evaluation
+## Verify the Build
 
-To run a single campaign, you may use the `mvn` command directly:
+To verify that you have succesfully compiled all fuzzers, you may run a small compaign for each fuzzer.
+
+- For example, to run a small campaign for the `ei` fuzzer with the `closure` target, you can run the following command:
+
+### Docker
+
+```bash
+docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval single ei closure /havoc-mutation-eval/data/raw/ei-closure-single-run PT5M
+```
+
+### Maven
 
 ```bash
 cd fuzzers
 mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
- -P{FUZZER},{TARGET}{,log-mutation} \
- -Dmeringue.outputDirectory={OUTPUT_DIR} \
- -Dmeringue.duration={DURATION}
+  -Pei,closure,log-mutation \
+  -Dmeringue.outputDirectory=../data/raw/ei-closure-single-run \
+  -Dmeringue.duration=PT5M
+```
+
+> [!NOTE]
+> Duration is defined the ISO-8601 duration format, e.g., `PT1H` for 1 hour, `PT5M` for 5 minutes, etc.
+
+
+Then you can check the output in `data/raw/ei-closure-single-run` directory:
+
+```tree
+.
+├── campaign
+│   ├── corpus              ---> Contains raw byte stream of each saved input.
+│   ├── coverage_hash
+│   ├── failures
+│   ├── fuzz.log            ---> Contains logs of the fuzzing process.
+│   ├── mutation.log        ---> Contains logs of the mutation process (mutation distance).
+│   └── plot_data
+├── coverage.csv            ---> Raw coverage data.
+├── failures.json
+├── jacoco
+│   └── jacoco.csv
+└── summary.json            ---> Contains a summary of the fuzzing results.
 ```
 
 ## Run all Evaluations
 
-We also provide a script to run all evaluations. To do so, run the following command:
 
-```python
-python3 run.py -h
-usage: run.py [-h] [--timeout TIMEOUT] [--cpus CPUS] [--rep REP] [--log-mutation LOG_MUTATION]
+We provide a script to run all evaluations. To do so, run the following command:
 
-Run fuzzers.
-
+```bash
 options:
   -h, --help            show this help message and exit
   --time Time           Running time in minutes
@@ -91,6 +118,18 @@ options:
   --rep REP             Number of repetitions
   --log-mutation LOG_MUTATION
                         Log mutation distance of each technique
+```
+
+### Docker
+
+```bash
+docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval run --time 5 --cpus 5 --rep 1 --log-mutation true
+```
+### Maven
+
+```bash
+cd fuzzers
+python3 ./run.py --time 5 --cpus 5 --rep 1 --log-mutation true
 ```
 
 This script will run all the fuzzers in parallel, using the number of CPUs specified by the `--cpus` argument. The default value is 1. The script will also run the fuzzers for the number of repetitions specified by the `--rep` argument. The default value is 1. The script will enable the mutation distance logging of each technique, if the `--log-mutation` argument is set to `true`. The default value is `false`.
