@@ -2,7 +2,7 @@
 
 This repository contains the code and data for the paper "The Havoc Paradox in Generator-Based Fuzzing".
 
-## Requirements
+## Requirements (Not required if using Docker)
 
 - **Python**: >= 3.10
 - **java**: == 11
@@ -16,7 +16,7 @@ This repository contains the code and data for the paper "The Havoc Paradox in G
 
 ## Build
 
-### Docker 
+### Docker
 
 We provide a Docker image that includes all the required dependencies and automatically builds the fuzzers. To use it:
 
@@ -86,7 +86,6 @@ mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
 > [!NOTE]
 > Duration is defined the ISO-8601 duration format, e.g., `PT1H` for 1 hour, `PT5M` for 5 minutes, etc.
 
-
 Then you can check the output in `data/raw/ei-closure-single-run` directory:
 
 ```tree
@@ -107,7 +106,6 @@ Then you can check the output in `data/raw/ei-closure-single-run` directory:
 
 ## Run all Evaluations
 
-
 We provide a script to run all evaluations. To do so, run the following command:
 
 ```bash
@@ -125,6 +123,7 @@ options:
 ```bash
 docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval run --time 5 --cpus 5 --rep 1 --log-mutation true
 ```
+
 ### Maven
 
 ```bash
