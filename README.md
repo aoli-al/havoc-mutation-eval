@@ -4,48 +4,53 @@ This repository contains the code and data for the paper "The Havoc Paradox in G
 
 ## Requirements
 
-* **Python**: >= 3.10
-* **java**: == 11
-* **Maven**: >= 3.8.6
+- **Python**: >= 3.10
+- **java**: == 11
+- **Maven**: >= 3.8.6
 
 **Minimum Hardware Requirements:**
-* **CPU**: >= 1 cores
-* **Memory**: >= 16 G
-* **Disk**: >= 50 G
 
-## Docker Setup (Recommended)
+- **CPU**: >= 1 cores
+- **Memory**: >= 16 G
+- **Disk**: >= 50 G
+
+## Docker Setup
 
 We provide a Docker image that includes all the required dependencies and automatically builds the fuzzers. To use it:
 
 1. Build the Docker image:
+
    ```bash
    docker build -t havoc-mutation-eval .
    ```
+
    Or if you want to use the pre-built image, you can pull it from Docker Hub:
+
    ```bash
    docker pull leeleo3x/havoc-mutation-eval
    docker tag leeleo3x/havoc-mutation-eval havoc-mutation-eval
    ```
 
 2. Run the Docker container:
+
    ```bash
    # Run all evaluations
    docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval run --time 5 --cpus 1 --rep 1 --log-mutation true
-   
+
    # Run a single campaign
    docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval single FUZZER TARGET OUTPUT_DIR DURATION
-   
+
    # Extract coverage data
    docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
-   
+
    # Extract mutation distance data
    docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract-mutation /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
-   
+
    # Start an interactive shell
    docker run -it -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval bash
    ```
 
-> [!NOTE] 
+> [!NOTE]
 > Duration is defined the ISO-8601 duration format, e.g., `PT1H` for 1 hour, `PT5M` for 5 minutes, etc.
 
 ## Build the Fuzzers
@@ -109,8 +114,7 @@ pip3 install -r requirements.txt
 
 Then, you can run the following command to extract the results from the raw data:
 
-
-### Pre-baked 
+### Pre-baked
 
 To analyze pre-baked result, you first need to download data from [FigShare](https://figshare.com/s/789b43d5b7845655a36d) and unzip the data in the `data/raw` folder.
 
