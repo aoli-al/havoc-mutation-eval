@@ -89,10 +89,10 @@ docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval single e
 ### Maven
 
 ```bash
-cd fuzzers
+cd fuzzers/zeugma
 mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
   -Pei,closure,log-mutation \
-  -Dmeringue.outputDirectory=../data/raw/ei-closure-single-run \
+  -Dmeringue.outputDirectory=../../../../data/raw/ei-closure-single-run \
   -Dmeringue.duration=PT5M
 ```
 
