@@ -25,6 +25,10 @@ ALGOS = [
     "zest-mini",
 ]
 
+def call(command: list[str]):
+    subprocess.call(command, cwd=os.path.join(BASE_DIR, "zeugma"))
+
+
 
 def get_commands(time: int, log_mutation: bool, repetitions: int, base_dir: str):
     log_mutation_profile = ",log-mutation" if log_mutation else ""
@@ -53,7 +57,7 @@ def main():
         shutil.rmtree(base_dir)
     os.makedirs(base_dir, exist_ok=True)
     with Pool(args.cpus) as p:
-        p.map(subprocess.call, get_commands(
+        p.map(call, get_commands(
             args.time, args.log_mutation, args.rep, base_dir))
 
 

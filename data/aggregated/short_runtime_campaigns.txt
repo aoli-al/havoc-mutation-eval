@@ -1,2 +1,0 @@
-Total campaigns with runtime < 99% of 24 hours: 0
-

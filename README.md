@@ -2,17 +2,43 @@
 
 This repository contains the code and data for the paper "The Havoc Paradox in Generator-Based Fuzzing".
 
-## Requirements (Not required if using Docker)
-
-- **Python**: >= 3.10
-- **java**: == 11
-- **Maven**: >= 3.8.6
-
-**Minimum Hardware Requirements:**
+## Minimum Hardware Requirements
 
 - **CPU**: >= 1 cores
 - **Memory**: >= 16 G
 - **Disk**: >= 50 G
+
+## Use Pre-baked Data
+
+### Aggregated Data
+
+The aggregated data is available in the `data/aggregated` folder. The data is organized in the following structure:
+
+```tree
+.
+├── campaign_trials_detail.csv        
+├── corpus_sizes.csv
+├── coverage.csv
+├── mutation_distances.csv
+├── short_runtime_campaigns.txt
+└── technique_benchmark_summary.csv
+```
+
+You can use this data to reproduce the results in the paper directly. See [Visualize the Results](#visualize-the-results).
+
+### Pre-baked Raw Data
+
+To analyze pre-baked raw result, you first need to download data from [FigShare](https://figshare.com/s/789b43d5b7845655a36d) and unzip the data in the `data/raw` folder.
+
+```
+cd ./data/raw
+wget ...
+unzip pre-baked.zip
+cd ../..
+```
+
+Next, you can use the provided scripts to generate the aggregated data. See [Post-process the Results](#post-process-the-results).
+
 
 ## Build
 
@@ -33,26 +59,13 @@ We provide a Docker image that includes all the required dependencies and automa
    docker tag leeleo3x/havoc-mutation-eval havoc-mutation-eval
    ```
 
-<!-- 2. Run the Docker container:
-
-   ```bash
-   # Run all evaluations
-   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval run --time 5 --cpus 1 --rep 1 --log-mutation true
-
-   # Run a single campaign
-   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval single FUZZER TARGET OUTPUT_DIR DURATION
-
-   # Extract coverage data
-   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
-
-   # Extract mutation distance data
-   docker run -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval extract-mutation /havoc-mutation-eval/data/raw/fresh-baked /havoc-mutation-eval/data/aggregated
-
-   # Start an interactive shell
-   docker run -it -v $(pwd)/data:/havoc-mutation-eval/data havoc-mutation-eval bash
-   ``` -->
-
 ### Maven
+
+#### Requirements 
+
+- **Python**: >= 3.10
+- **java**: == 11
+- **Maven**: >= 3.8.6
 
 - To build the fuzzers, run the following command:
 
@@ -152,46 +165,31 @@ pip3 install -r requirements.txt
 
 Then, you can run the following command to extract the results from the raw data:
 
-### Pre-baked
-
-To analyze pre-baked result, you first need to download data from [FigShare](https://figshare.com/s/789b43d5b7845655a36d) and unzip the data in the `data/raw` folder.
-
-```
-cd ./data/raw
-wget ...
-unzip pre-baked.zip
-cd ../..
-```
-
 - To extract the coverage data
 
 ```bash
-python3 ./scripts/extract.py ./data/raw/pre-baked/24h-no-mutation-distance ./data/aggregated
+python3 ./scripts/extract.py PATH_TO_RAW_DATA PATH_TO_AGGREGATED_DATA
 ```
 
 - To extract the mutation distance data
 
 ```bash
-python3 ./scripts/extract_mutation_data.py ./data/raw/pre-baked/1h-with-mutation-distance ./data/aggregated
+python3 ./scripts/extract_mutation_data.py PATH_TO_RAW_DATA PATH_TO_AGGREGATED_DATA
 ```
 
-### Fresh-baked
-
-- First you may extract the coverage data.
+For example, to extract the coverage data from the pre-baked data, you can run the following command:
 
 ```bash
-python3 ./scripts/extract.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
+python3 ./scripts/extract.py ./data/raw/pre-baked/24h-no-mutation-distance ./data/aggregated/pre-baked
 ```
 
-- If you have run the campaigns with the `--log-mutation` argument set to `true`, you can also run the following command to post-process the mutation distance logs:
+To extract the mutation distance data, you can run the following command:
 
 ```bash
-python3 ./scripts/extract_mutation_data.py ./data/raw/fresh-baked ./data/aggregated/fresh-baked
+python3 ./scripts/extract_mutation_data.py ./data/raw/pre-baked/1h-with-mutation-distance ./data/aggregated/pre-baked
 ```
 
-Next, you may check the aggregated result in the `data/aggregated/fresh-baked` folder.
-
-## Visualized the Results
+## Visualize the Results
 
 You may open `notebooks/Final Results.ipynb` to visualize the results. Remember to change `DATA_DIR` to `../data/aggregated/fresh-baked` in the notebook if you want to analyze fresh-baked data.
 

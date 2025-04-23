@@ -39,7 +39,7 @@ case "$1" in
             echo "Usage: single FUZZER TARGET OUTPUT_DIR DURATION"
             exit 1
         fi
-        cd fuzzers
+        cd fuzzers/zeugma
         mvn -pl :zeugma-evaluation-tools meringue:fuzz meringue:analyze \
             -P$1,$2,log-mutation \
             -Dmeringue.outputDirectory=$3 \
