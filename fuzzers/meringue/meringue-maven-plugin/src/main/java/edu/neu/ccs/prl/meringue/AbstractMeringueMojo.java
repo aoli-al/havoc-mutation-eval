@@ -84,6 +84,10 @@ abstract class AbstractMeringueMojo extends AbstractMojo implements CampaignValu
     private RepositorySystem repositorySystem;
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
+    /**
+     * Temporary directory unique to this instance.
+     * Ensures that different executions of the plugin write to different directories.
+     */
     private File temporaryDirectoryPerInstance;
 
     @Override
@@ -146,9 +150,14 @@ abstract class AbstractMeringueMojo extends AbstractMojo implements CampaignValu
     public File getTemporaryDirectory() throws MojoExecutionException {
         if (temporaryDirectoryPerInstance == null) {
             try {
+                if (!temporaryDirectory.exists()) {
+                    if (!temporaryDirectory.mkdirs()) {
+                        throw new MojoExecutionException("Failed to create temporary directory");
+                    }
+                }
                 temporaryDirectoryPerInstance = Files.createTempDirectory(temporaryDirectory.toPath(), "meringue-").toFile();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new MojoExecutionException("Failed to create temporary directory", e);
             }
         }
         return temporaryDirectoryPerInstance;
